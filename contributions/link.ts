@@ -15,7 +15,7 @@ import {
 } from "react-icons/fa";
 
 import type { ContributionLoaded, VisibleProps } from "@/types";
-import { categories } from "./link.categories";
+import { categories } from "./lib/link.categories";
 
 type CatItem = {
   title?: string;

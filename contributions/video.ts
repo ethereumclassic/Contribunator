@@ -2,12 +2,13 @@ import type { ContributionLoaded } from "@/types";
 
 import { demo, e2e } from "@/lib/env";
 import { getDateStamp } from "@/lib/helpers/timestamp";
+import locales from "./lib/locales";
 
 export default function videoContribution(): ContributionLoaded {
   return {
-    useFilesOnServer: {
-      videos: "content/videos/videos.collection.en.yaml",
-    },
+    useFilesOnServer: ({ data: { locale = "en" } }) => ({
+      videos: `content/videos/videos.collection.${locale}.yaml`,
+    }),
     useDataOnServer: async ({ data: { youtube } }) => {
       if (e2e || demo) {
         return {
@@ -34,7 +35,7 @@ export default function videoContribution(): ContributionLoaded {
     },
     prMetadata: (props) => {
       const {
-        data: { youtube, title },
+        data: { youtube, title, locale },
         fetched: { yt = {} } = {},
       } = props;
       const missingTitle = "[video title]";
@@ -50,7 +51,7 @@ export default function videoContribution(): ContributionLoaded {
           title || yt.title || missingTitle
         }](https://www.youtube.com/watch?v=${youtube}) by [${vAuthor}](https://www.youtube.com/channel/${
           yt.channelId || "CHANNEL_ID"
-        }).`,
+        }).${locale ? ` Locale: ${locale}.` : ""}`,
       };
     },
     commit: async ({
@@ -136,6 +137,7 @@ export default function videoContribution(): ContributionLoaded {
           info: "Do not include promotions or links to other sites",
           validation: { max: 1000, min: 20 },
         },
+        locale: locales,
       },
     },
   };

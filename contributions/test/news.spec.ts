@@ -97,15 +97,18 @@ test("news submits full", async ({ f }) => {
   await f.setText("Author Name", "Bobby Tables");
   await f.setText("Source Name", "New York Times");
 
+  await f.setText("Published Date", "2021-01-23");
+
   await f.clickButton("Tags", "Development");
   await f.clickButton("Tags", "Teams");
   await f.clickButton("Tags", "Series");
 
-  await f.setText("Published Date", "2021-01-23");
+  await f.clickButton("Language", "中文");
 
   // return;
   expect(await f.submit()).toEqual({
     req: {
+      locale: "zh",
       author: "Bobby Tables",
       authorization: "anon",
       contribution: "news",
@@ -122,7 +125,7 @@ test("news submits full", async ({ f }) => {
         changes: [
           {
             files: {
-              "content/news/links.collection.en.yaml": `- date: 2021-01-23
+              "content/news/links.collection.zh.yaml": `- date: 2021-01-23
   title: My Test Article
   link: https://example.com
   author: Bobby Tables
@@ -131,19 +134,6 @@ test("news submits full", async ({ f }) => {
     - development
     - teams
     - series
-- date: 2023-02-01
-  link: https://example.com/
-  title: Test news item
-  tags:
-    - announcement
-- date: 2022-09-08
-  link: https://test.com/
-  author: Autho Test
-  source: Source Test
-  title: This is some weird title.
-  tags:
-    - food
-    - information
 `,
             },
             message: "Add News Article: My Test Article",
@@ -170,11 +160,14 @@ Bobby Tables
 ## Source Name
 New York Times
 
+## Published Date
+2021-01-23
+
 ## Tags
 Development, Teams, Series
 
-## Published Date
-2021-01-23${f.FOOTER}`,
+## Language
+中文${f.FOOTER}`,
         head: "c11r/timestamp-add-news-article-my-test-article",
         owner: "ethereumclassic",
         repo: "ethereumclassic.github.io",

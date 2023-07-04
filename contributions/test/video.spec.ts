@@ -83,9 +83,11 @@ test("video submits full", async ({ f }) => {
   await f.setText("Override Title", "Custom Title");
   await f.setText("Optional Description", "Custom Multiline\n\nDescription");
 
-  // return;
+  await f.clickButton("Language", "中文");
+
   expect(await f.submit()).toEqual({
     req: {
+      locale: "zh",
       authorization: "anon",
       contribution: "video",
       description: `Custom Multiline
@@ -102,7 +104,7 @@ Description`,
         changes: [
           {
             files: {
-              "content/videos/videos.collection.en.yaml": `- title: Custom Title
+              "content/videos/videos.collection.zh.yaml": `- title: Custom Title
   date: TIMESTAMP
   uploaded: PUBLISHED
   youtube: GCBv1VCN2tE
@@ -116,16 +118,6 @@ Description`,
     Custom Multiline
 
     Description
-- title: Test Video
-  date: 2022-02-08
-  uploaded: 2022-02-08
-  youtube: o4n6pqRyA1c
-  tags:
-    - discussions
-    - explainers
-  author: Existing Author
-  authorYoutube: c/channel_name
-  description: my description here
 `,
             },
             message: "Add Video: E2E Test Video Author - Custom Title",
@@ -138,7 +130,7 @@ Description`,
       },
       pr: {
         base: "main",
-        body: `This PR adds the video [Custom Title](https://www.youtube.com/watch?v=GCBv1VCN2tE) by [E2E Test Video Author](https://www.youtube.com/channel/CHANNEL_ID).${f.FOOTER}`,
+        body: `This PR adds the video [Custom Title](https://www.youtube.com/watch?v=GCBv1VCN2tE) by [E2E Test Video Author](https://www.youtube.com/channel/CHANNEL_ID). Locale: zh.${f.FOOTER}`,
         head: "c11r/timestamp-add-video-e2e-test-video-author-custom-title",
         owner: "ethereumclassic",
         repo: "ethereumclassic.github.io",

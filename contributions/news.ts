@@ -1,13 +1,14 @@
 import { getDateStamp } from "@/lib/helpers/timestamp";
 
 import type { ContributionLoaded } from "@/types";
+import locales from "./lib/locales";
 
 export default function newsLoader(): ContributionLoaded {
   return {
-    useFilesOnServer: {
-      news: "content/news/links.collection.en.yaml",
-    },
-    commit: async ({ files, data: { date, ...data } }) => {
+    useFilesOnServer: ({ data: { locale = "en" } }) => ({
+      news: `content/news/links.collection.${locale}.yaml`,
+    }),
+    commit: async ({ files, data: { date, locale, ...data } }) => {
       return {
         yaml: {
           [files.news.path]: [
@@ -41,6 +42,14 @@ export default function newsLoader(): ContributionLoaded {
           title: "Source Name",
           placeholder: "e.g. CoinDesk",
         },
+        date: {
+          type: "text",
+          input: "date",
+          clear: true,
+          title: "Published Date",
+          info: "Leave blank for today's date",
+          placeholder: "e.g. 2021-01-01",
+        },
         tags: {
           type: "choice",
           multiple: true,
@@ -65,14 +74,7 @@ export default function newsLoader(): ContributionLoaded {
             series: { title: "Series" },
           },
         },
-        date: {
-          type: "text",
-          input: "date",
-          clear: true,
-          title: "Published Date",
-          info: "Leave blank for today's date",
-          placeholder: "e.g. 2021-01-01",
-        },
+        locale: locales,
       },
     },
   };
