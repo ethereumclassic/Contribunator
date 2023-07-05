@@ -14,7 +14,7 @@ export default function tweetConfig({
     description,
     contributions: {
       tweet: tweet({
-        title: "Suggest a Tweet for @eth_classic",
+        title: `Suggest a Tweet for ${account}`,
         options: { retweetTextRequired: true },
         form: {
           description: `${description} Please check the repository rules before submitting to increase the chances that your tweet is accepted.`,
