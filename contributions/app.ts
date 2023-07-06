@@ -114,10 +114,10 @@ export default function dappContribution(): ContributionLoaded {
           validation: { url: true },
         },
         openSource: {
-          title: "Source Code Link",
+          title: "Source Repository",
           type: "text",
           placeholder: "e.g. https://github.com/my-org/my-repo",
-          info: "Open Source Definition",
+          info: "Only complete if your project meets the Open Source Definition",
           infoLink: "https://en.wikipedia.org/wiki/The_Open_Source_Definition",
           validation: { url: true },
         },
