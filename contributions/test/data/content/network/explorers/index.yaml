@@ -1,0 +1,8 @@
+items:
+  explorers:
+    items:
+      BlockScout:
+        __name: BlockScout
+        __etc: https://blockscout.com/etc/mainnet/
+        __kotti: https://blockscout.com/etc/kotti/
+        __mordor: https://blockscout.com/etc/mordor/

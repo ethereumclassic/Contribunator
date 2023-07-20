@@ -1,0 +1,7 @@
+items:
+  endpoints:
+    items:
+      ETC Cooperative:
+        __rpcUrl: https://etc.rivet.link
+        __link: https://rivet.link
+        __name: ETC Cooperative

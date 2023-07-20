@@ -15,46 +15,7 @@ import {
 } from "react-icons/fa";
 
 import type { ContributionLoaded, VisibleProps } from "@/types";
-import { categories } from "./lib/link.categories";
-
-type CatItem = {
-  title?: string;
-  sourcePath?: string;
-  showIcons?: boolean;
-  showDescription?: boolean;
-  sourceKey?: string;
-  keyMap?: { [key: string]: string };
-  [key: string]: CatItem | string | boolean | undefined;
-};
-
-export type CatMap = {
-  [key: string]: CatItem;
-};
-
-// recursively transform categories into formOptions
-function getFormOptions(obj: any): any {
-  return Object.keys(obj).reduce((acc: any, key: string) => {
-    if (typeof obj[key] !== "object") return acc;
-    const options = getFormOptions(obj[key]);
-    return {
-      ...acc,
-      [key]: {
-        title: obj[key].title,
-        options: Object.keys(options).length ? options : undefined,
-      },
-    };
-  }, {});
-}
-
-// traverse categories and find the first parent with a matching key
-function getCatProp(keyToMatch: string, cat: string, categories: CatMap) {
-  let prop: any = categories;
-  cat.split(".").forEach((key: string) => {
-    if (typeof prop !== "object") return;
-    prop = prop[key][keyToMatch] || prop[key];
-  }, categories);
-  return typeof prop !== "object" && prop;
-}
+import { options, categories } from "./lib/link.categories";
 
 const keyMap: any = {
   name: "__name",
@@ -62,24 +23,31 @@ const keyMap: any = {
   icon: "__icon",
 };
 
-// TODO make this more configurable, default name, cat-specific keymap
+function visible(key: string) {
+  return ({ formik }: VisibleProps) => {
+    const cat = formik.getFieldProps("category").value;
+    return cat && get(categories, `${cat}.${key}`);
+  };
+}
 
 export default function linkLoader(): ContributionLoaded {
   return {
     useFilesOnServer({ data: { category } }) {
-      const links = getCatProp("sourcePath", category, categories);
+      const links = get(categories, `${category}.sourcePath`);
       if (!links) throw new Error("No sourcePath found for category", category);
       return { links };
     },
     commit: async ({ files: { links }, data: { category, ...data } }) => {
-      const sourceKey = getCatProp("sourceKey", category, categories);
+      const sourceKey = get(categories, `${category}.sourceKey`);
       // TODO itemsKey into an option?
       const itemsKey = `items.${sourceKey}.items`;
       // upsert the existing object, sort by name
       const oldLinks = get(links.parsed || {}, itemsKey, {});
       const newLinks: any = {};
 
-      oldLinks[data.name] = mapKeys(data, (_v, key) => keyMap[key] || key);
+      const catKeyMap = get(categories, `${category}.keyMap`) || keyMap;
+
+      oldLinks[data.name] = mapKeys(data, (_v, key) => catKeyMap[key] || key);
 
       sortBy(Object.keys(oldLinks), (key) => key.toLowerCase()).forEach(
         (key) => {
@@ -99,7 +67,7 @@ export default function linkLoader(): ContributionLoaded {
           type: "choice",
           validation: { required: true },
           title: "Category",
-          options: getFormOptions(categories),
+          options,
         },
         name: {
           type: "text",
@@ -118,10 +86,7 @@ export default function linkLoader(): ContributionLoaded {
           type: "choice",
           unset: "No Icon",
           as: "buttons",
-          visible: ({ formik }: VisibleProps) => {
-            const cat = formik.getFieldProps("category").value;
-            return cat && getCatProp("showIcons", cat, categories);
-          },
+          visible: visible("showIcons"),
           options: {
             facebook: { icon: FaFacebook },
             twitter: { icon: FaTwitter },
@@ -138,10 +103,7 @@ export default function linkLoader(): ContributionLoaded {
           type: "text",
           as: "textarea",
           placeholder: "e.g. This website contains lots of useful information.",
-          visible: ({ formik }: VisibleProps) => {
-            const cat = formik.getFieldProps("category").value;
-            return cat && getCatProp("showDescription", cat, categories);
-          },
+          visible: visible("showDescription"),
         },
       },
     },

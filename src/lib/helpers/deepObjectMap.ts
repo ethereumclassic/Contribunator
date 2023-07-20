@@ -3,8 +3,8 @@
 // it returns the original values if unmodified
 export default function deepObjectMap(
   obj: unknown | unknown[],
-  transform: (key: string | number, value: unknown) => unknown,
-  parentKey: string | number = ""
+  transform: (key: string, value: unknown) => unknown,
+  parentKey: string = ""
 ): unknown | unknown[] {
   if (Array.isArray(obj)) {
     return obj.map((value, index) =>
