@@ -13,7 +13,7 @@ import { deepTrimImageData } from "test/fixtures/deepTrimImageData";
 // common
 /*
   validation?: ValidationTypes;
-  visible?: (p: VisibleProps) => boolean;
+  hidden?: (p: VisibleProps) => boolean;
 */
 
 // validation

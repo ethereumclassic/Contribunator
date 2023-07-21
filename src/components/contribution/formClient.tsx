@@ -22,6 +22,7 @@ import FormFields from "./fields";
 import ConfirmationModal from "./common/confirmationModal";
 import Loading from "../common/spinner";
 import { HiExclamationCircle } from "react-icons/hi";
+import { FormContext } from "./formContext";
 
 declare global {
   interface Window {
@@ -76,28 +77,30 @@ function Form({
         }}
       >
         {(formik: FormikContext) => (
-          <form
-            onSubmit={formik.handleSubmit}
-            className={`text-center space-y-8 bg-base-200 p-4 rounded-lg relative`}
-          >
-            {state.pr && <Submitted pr={state.pr} test={state.test} />}
-            {!state.pr && (
-              <>
-                <FormFields fields={config.contribution.form.fields} />
-                <AuthWidgets {...{ formik, config }} />
-                <SubmitButton {...{ formik, config, state }} />
-                {state.error && (
-                  <div className="alert alert-error">
-                    <HiExclamationCircle />
-                    <span>
-                      <b>Error:</b> {state.error}
-                    </span>
-                  </div>
-                )}
-                <CommonOptions {...{ formik, config }} />
-              </>
-            )}
-          </form>
+          <FormContext.Provider value={{ formik, config }}>
+            <form
+              onSubmit={formik.handleSubmit}
+              className={`text-center space-y-8 bg-base-200 p-4 rounded-lg relative`}
+            >
+              {state.pr && <Submitted pr={state.pr} test={state.test} />}
+              {!state.pr && (
+                <>
+                  <FormFields fields={config.contribution.form.fields} />
+                  <AuthWidgets {...{ formik, config }} />
+                  <SubmitButton {...{ formik, config, state }} />
+                  {state.error && (
+                    <div className="alert alert-error">
+                      <HiExclamationCircle />
+                      <span>
+                        <b>Error:</b> {state.error}
+                      </span>
+                    </div>
+                  )}
+                  <CommonOptions {...{ formik, config }} />
+                </>
+              )}
+            </form>
+          </FormContext.Provider>
         )}
       </Formik>
     </>

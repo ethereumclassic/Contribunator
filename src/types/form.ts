@@ -15,10 +15,10 @@ import type { Props as ImageInput } from "@/components/contribution/fields/image
 import type { Props as ImagesInput } from "@/components/contribution/fields/imagesInput";
 import type { Props as InfoField } from "@/components/contribution/fields/infoField";
 import type { Props as TextInput } from "@/components/contribution/fields/textInput";
+import { Decorated } from "@/lib/helpers/decorateFormData";
 
 export type { NestedChoiceOptions } from "@/components/contribution/fields/choiceInput";
 export type {
-  IframeProps,
   Suggestion,
   Suggestions,
 } from "@/components/contribution/fields/textInput";
@@ -47,20 +47,30 @@ export type ValidationTypes = {
   yup?: Schema<unknown>;
 };
 
-// TODO move to collection?
-export type VisibleProps = {
-  formik: FormikContext;
-  field: Field & { name: string };
-};
-
-type BaseField = {
+export type Field = {
   validation?: ValidationTypes;
-  visible?: (p: VisibleProps) => boolean;
+  hidden?: boolean;
+} & GenericField;
+
+export type DynamicPropertyProps = {
+  value: any;
+  formik: FormikContext;
+  config: ConfigWithContribution;
+} & Decorated;
+
+type DynamicProperties<T> = {
+  [P in keyof T]: T[P] | ((props: DynamicPropertyProps) => T[P]);
 };
 
-export type Field = BaseField & GenericField;
+export type DyanmicField = Exclude<
+  DynamicProperties<Field>,
+  "type" | "validation"
+> & {
+  type: string;
+  validation?: ValidationTypes;
+};
 
-export type Fields = { [key: string]: Field };
+export type Fields = { [key: string]: DyanmicField };
 
 export type Form = {
   title?: string;

@@ -1,7 +1,6 @@
-import type { ReactElement } from "react";
-import { useFormikContext } from "formik";
+import { useField } from "formik";
 
-import type { Field as FieldBase, Fields, FormikContext } from "@/types";
+import type { DyanmicField, Fields } from "@/types";
 
 // this causes weird page loading issues
 // instead, load heavy libraries within the component (e.g. image)
@@ -21,6 +20,7 @@ import ImageInput from "./imageInput";
 import ImagesInput from "./imagesInput";
 import InfoField from "./infoField";
 import CollectionInput from "./collectionInput";
+import { useForm } from "../formContext";
 
 const components = {
   text: TextInput,
@@ -31,44 +31,35 @@ const components = {
   collection: CollectionInput,
 };
 
-type Field = FieldBase & { name: string };
-
-type VisibilityProps = {
-  field: Field;
-  children: ReactElement | null;
-};
-
-// fetch values for visible method
-function RenderWhenVisible({ field, children }: VisibilityProps) {
-  const formik = useFormikContext() as FormikContext;
-  const visible = field.visible && field.visible({ formik, field });
-  if (!visible) return null;
-  return children;
-}
-
-// show early if visibility method not defined
-function VisibilityCheck({ field, children }: VisibilityProps) {
-  if (!field.visible) return children;
-  // otherwise do the more expensive check
-  return <RenderWhenVisible field={field}>{children}</RenderWhenVisible>;
+function FieldItem({ field }: { field: DyanmicField & { name: string } }) {
+  // get formik context so it's less expensive
+  // TODO optimize this
+  const form = useForm();
+  const [{ value }] = useField(field.name);
+  // we should check if we need to re-render properly
+  const resolved: any = { ...field };
+  // TODO handle iframe and transform fields...
+  Object.entries(field).forEach(([fKey, fValue]) => {
+    if (typeof fValue === "function") {
+      resolved[fKey] = fValue({ ...form, value });
+    }
+  });
+  // TODO we should unset hidden values
+  if (resolved.hidden) {
+    return null;
+  }
+  // @ts-ignore
+  const Input = components[field.type];
+  // @ts-ignore
+  return <Input {...resolved} />;
 }
 
 export default function FormFields({ fields }: { fields: Fields }) {
   return (
     <>
-      {Object.entries(fields).map(([name, val]) => {
-        const field = { name, ...val } as Field;
-        // TODO
-        // @ts-ignore
-        const Input = components[field.type];
-        return (
-          <VisibilityCheck key={name} field={field}>
-            {/* TODO fix this, typescript? */}
-            {/* @ts-ignore */}
-            <Input {...field} />
-          </VisibilityCheck>
-        );
-      })}
+      {Object.entries(fields).map(([name, val]) => (
+        <FieldItem key={name} field={{ ...val, name }} />
+      ))}
     </>
   );
 }

@@ -5,7 +5,7 @@ import FieldHeader from "../common/fieldHeader";
 import Iframe from "../common/iframe";
 
 // TODO move these types in to a config
-export type IframeProps = {
+export type DynamicTextProps = {
   field: FieldInputProps<string>;
   meta: FieldMetaProps<unknown>;
 };
@@ -27,7 +27,7 @@ export type Props = {
   infoLink?: string;
   placeholder?: string;
   transform?: (value: string) => string;
-  iframe?: (props: IframeProps) => string | null;
+  iframe?: (props: DynamicTextProps) => string | null;
   suggestions?: Suggestions;
   tags?: string[];
   clear?: boolean;

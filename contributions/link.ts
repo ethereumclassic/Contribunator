@@ -2,6 +2,7 @@ import get from "lodash/get";
 import mapKeys from "lodash/mapKeys";
 import set from "lodash/set";
 import sortBy from "lodash/sortBy";
+import { string } from "yup";
 
 import {
   FaDiscord,
@@ -14,7 +15,7 @@ import {
   FaYoutube,
 } from "react-icons/fa";
 
-import type { ContributionLoaded, VisibleProps } from "@/types";
+import type { ContributionLoaded } from "@/types";
 import { options, categories } from "./lib/link.categories";
 
 const keyMap: any = {
@@ -22,13 +23,6 @@ const keyMap: any = {
   link: "__link",
   icon: "__icon",
 };
-
-function visible(key: string) {
-  return ({ formik }: VisibleProps) => {
-    const cat = formik.getFieldProps("category").value;
-    return cat && get(categories, `${cat}.${key}`);
-  };
-}
 
 export default function linkLoader(): ContributionLoaded {
   return {
@@ -46,6 +40,8 @@ export default function linkLoader(): ContributionLoaded {
       const newLinks: any = {};
 
       const catKeyMap = get(categories, `${category}.keyMap`) || keyMap;
+
+      // TODO don't include hidden fields
 
       oldLinks[data.name] = mapKeys(data, (_v, key) => catKeyMap[key] || key);
 
@@ -71,13 +67,15 @@ export default function linkLoader(): ContributionLoaded {
         },
         name: {
           type: "text",
-          title: "Name", // TODO option to make this dynamic
-          placeholder: "e.g. My Website Name",
+          title: ({ formData }) =>
+            `Name of ${formData.category?.markdown || ""}`,
+          placeholder: ({ formData }) =>
+            `e.g. The world's best ${formData.category?.markdown || ""}`,
           validation: { required: true, min: 3, max: 50 },
         },
         link: {
           type: "text",
-          title: "URL",
+          title: "Homepage or URL",
           placeholder: "e.g. https://www.example.com",
           validation: { required: true, url: true },
         },
@@ -86,7 +84,7 @@ export default function linkLoader(): ContributionLoaded {
           type: "choice",
           unset: "No Icon",
           as: "buttons",
-          visible: visible("showIcons"),
+          hidden: ({ data }) => !get(categories, `${data.category}.showIcons`),
           options: {
             facebook: { icon: FaFacebook },
             twitter: { icon: FaTwitter },
@@ -103,7 +101,15 @@ export default function linkLoader(): ContributionLoaded {
           type: "text",
           as: "textarea",
           placeholder: "e.g. This website contains lots of useful information.",
-          visible: visible("showDescription"),
+          hidden: ({ data }) =>
+            !get(categories, `${data.category}.showDescription`),
+          validation: {
+            yup: string().when("category", {
+              is: (category: string) =>
+                get(categories, `${category}.showDescription`),
+              then: (schema) => schema.required(),
+            }),
+          },
         },
       },
     },

@@ -20,17 +20,23 @@ type DecorateFormDataProps = {
   config: ConfigWithContribution;
 };
 
+export type Decorated = {
+  data: Data;
+  formData: FormData;
+  images: ExtractedImagesFlat;
+};
+
 export function decorateFormData({
   config: { contribution, repo },
   data,
   timestamp = getTimeStamp(), // only used to render preview
-}: DecorateFormDataProps) {
+}: DecorateFormDataProps): Decorated {
   // todo also ensure the data is ordered
   // in the future we can apply transformations to the data here
 
   const images: ExtractedImagesFlat = {};
-  const formData: FormData = {};
-  const decorated: Data = {};
+  const decoratedData: FormData = {};
+  const orderedData: Data = {};
 
   // TODO don't use any
   const decorateDeep = (val: any, path: Path = []) => {
@@ -115,11 +121,11 @@ export function decorateFormData({
         .join(", ");
     }
 
-    set(formData, path, item);
-    set(decorated, path, val);
+    set(decoratedData, path, item);
+    set(orderedData, path, val);
   };
 
   decorateDeep(data);
 
-  return { images, formData, data: decorated };
+  return { images, formData: decoratedData, data: orderedData };
 }
