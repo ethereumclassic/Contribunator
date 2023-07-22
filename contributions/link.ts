@@ -41,8 +41,6 @@ export default function linkLoader(): ContributionLoaded {
 
       const catKeyMap = get(categories, `${category}.keyMap`) || keyMap;
 
-      // TODO don't include hidden fields
-
       oldLinks[data.name] = mapKeys(data, (_v, key) => catKeyMap[key] || key);
 
       sortBy(Object.keys(oldLinks), (key) => key.toLowerCase()).forEach(
@@ -67,10 +65,9 @@ export default function linkLoader(): ContributionLoaded {
         },
         name: {
           type: "text",
-          title: ({ formData }) =>
-            `Name of ${formData.category?.markdown || ""}`,
-          placeholder: ({ formData }) =>
-            `e.g. The world's best ${formData.category?.markdown || ""}`,
+          title: "Service Name",
+          placeholder: ({ decorated }) =>
+            `e.g. The world's best ${decorated.category?.markdown || ""}`,
           validation: { required: true, min: 3, max: 50 },
         },
         link: {

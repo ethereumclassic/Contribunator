@@ -1,20 +1,24 @@
-import dynamic from "next/dynamic";
-import { useField } from "formik";
-
-import FieldHeader from "../common/fieldHeader";
-import RemoveButton from "../common/removeButton";
-
-import TextInput from "./textInput";
 import { useEffect } from "react";
+import { useField } from "formik";
+import dynamic from "next/dynamic";
+import type { Dynamic, UnwrapDynamic } from "@/types";
+
+import FieldHeader from "@/components/contribution/common/fieldHeader";
+import RemoveButton from "@/components/contribution/common/removeButton";
+import TextInput from "@/components/contribution/fields/text/textInput";
+
+import withDynamicField from "../withDynamicField";
+
+export const dynamicImageProps = ["title", "info"] as const;
 
 const EditImage = dynamic(() => import("./imageEdit"));
 
 export type Props = {
   fileSizeLimit?: number;
-  title?: string;
+  title?: Dynamic<string>;
   name: string;
   alt?: boolean | string;
-  info?: string;
+  info?: Dynamic<string>;
   aspectRatio?: number;
 };
 
@@ -70,7 +74,7 @@ function ImageSelect({
   );
 }
 
-export default function ImageInput({
+function ImageInput({
   name,
   alt,
   aspectRatio,
@@ -79,7 +83,10 @@ export default function ImageInput({
   fileSizeLimit = defaultInfo.fileSizeLimit,
   handleRemove,
   showErrors = true,
-}: Props & { showErrors?: boolean; handleRemove?: () => void }) {
+}: UnwrapDynamic<Props, (typeof dynamicImageProps)[number]> & {
+  showErrors?: boolean;
+  handleRemove?: () => void;
+}) {
   // preload the image edit component on the client
   useEffect(() => {
     import("./imageEdit");
@@ -158,3 +165,5 @@ export default function ImageInput({
     </div>
   );
 }
+
+export default withDynamicField(ImageInput, dynamicImageProps);

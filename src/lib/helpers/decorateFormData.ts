@@ -1,10 +1,13 @@
 import {
   ConfigWithContribution,
   Data,
+  DecoratedData,
+  DecoratedDataItem,
+  DynamicProps,
   ExtractedImagesFlat,
-  FormData,
-  FormDataItem,
 } from "@/types";
+
+import memoize from "lodash/memoize";
 
 import set from "lodash/set";
 import get from "lodash/get";
@@ -20,27 +23,27 @@ type DecorateFormDataProps = {
   config: ConfigWithContribution;
 };
 
-export type Decorated = {
+export type DecorateFormData = {
   data: Data;
-  formData: FormData;
+  decorated: DecoratedData;
   images: ExtractedImagesFlat;
 };
 
-export function decorateFormData({
+function decorateFormDataRaw({
   config: { contribution, repo },
   data,
   timestamp = getTimeStamp(), // only used to render preview
-}: DecorateFormDataProps): Decorated {
+}: DecorateFormDataProps): DecorateFormData {
   // todo also ensure the data is ordered
   // in the future we can apply transformations to the data here
 
   const images: ExtractedImagesFlat = {};
-  const decoratedData: FormData = {};
+  const decorated: DecoratedData = {};
   const orderedData: Data = {};
 
   // TODO don't use any
   const decorateDeep = (val: any, path: Path = []) => {
-    // make sure populate formData to match the order of the form field
+    // reorder to match the form definition
     const orderedIterate = (field = contribution.form.fields) => {
       const sorted: string[] = [];
       Object.keys(field).forEach((key) => {
@@ -82,13 +85,23 @@ export function decorateFormData({
           return `[${p + 1}]`;
         } else {
           const parent = get(contribution.form.fields, query.slice(0, i + 1));
+          // if the title is a function, call it with our data
+          if (typeof parent?.title === "function") {
+            const titleFn = parent.title as (p: DynamicProps) => string;
+            // TODO see below, required decorated data may not be popualted at this point
+            return titleFn({
+              data,
+              decorated,
+              value: val,
+            });
+          }
           return parent?.title || p;
         }
       })
       .filter((p) => p) // remove empty items
       .join(" ");
 
-    const item: FormDataItem = {
+    const item: DecoratedDataItem = {
       field,
       fullTitle,
       name: query[query.length - 1],
@@ -121,11 +134,25 @@ export function decorateFormData({
         .join(", ");
     }
 
-    set(decoratedData, path, item);
+    set(decorated, path, item);
     set(orderedData, path, val);
   };
 
+  // we need to decorate the data twice so we can fully populated data in generated titles
+  decorateDeep(data);
+  // TODO fix this hack?
   decorateDeep(data);
 
-  return { images, formData: decoratedData, data: orderedData };
+  return { images, decorated, data: orderedData };
 }
+
+export const decorateFormData = memoize(
+  decorateFormDataRaw,
+  ({ config: { contribution, repo }, data, timestamp }) =>
+    JSON.stringify({
+      contribution: contribution.name,
+      repo: repo.name,
+      data,
+      timestamp,
+    })
+);

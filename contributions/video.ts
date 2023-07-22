@@ -100,15 +100,7 @@ export default function videoContribution(): ContributionLoaded {
               return "";
             }
           },
-          iframe: ({ field, meta }) => {
-            if (!field.value || meta.error) return null;
-            return `https://www.youtube.com/embed/${field.value}`;
-          },
-        },
-        pasteInfo: {
-          type: "info",
-          title: "You can paste the YouTube Video ID or the full URL",
-          visible: ({ formik }) => !formik.values.youtube,
+          iframe: (value) => `https://www.youtube.com/embed/${value}`,
         },
         tags: {
           type: "choice",

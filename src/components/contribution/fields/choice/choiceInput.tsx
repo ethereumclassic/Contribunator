@@ -2,11 +2,14 @@ import { useField } from "formik";
 
 import type { ValidationTypes } from "@/types";
 
-import FieldHeader from "../common/fieldHeader";
+import type { Dynamic, UnwrapDynamic } from "@/types";
+
+import FieldHeader from "@/components/contribution/common/fieldHeader";
 
 import ChoiceDropdown from "./choiceDropdown";
 import ChoiceButtons from "./choiceButtons";
 import React from "react";
+import withDynamicField from "../withDynamicField";
 
 type ChoiceOption = {
   title?: string;
@@ -20,14 +23,16 @@ export type NestedChoiceOptions = {
 
 export type Props = {
   name: string;
-  title?: string;
+  title?: Dynamic<string>;
   unset?: string;
-  info?: string;
+  info?: Dynamic<string>;
   multiple?: boolean;
   options: NestedChoiceOptions;
   validation?: ValidationTypes;
   as?: "dropdown" | "buttons" | "buttons-inline";
 };
+
+const dynamicProps = ["title", "info"] as const;
 
 export type ChoiceCompProps = Omit<Props, "name"> & {
   handleChange: (value: string | undefined) => void;
@@ -35,7 +40,9 @@ export type ChoiceCompProps = Omit<Props, "name"> & {
   inline?: boolean;
 };
 
-export default function ChoiceInput(props: Props) {
+function ChoiceInput(
+  props: UnwrapDynamic<Props, (typeof dynamicProps)[number]>
+) {
   const { multiple, validation, name } = props;
   const [field, meta, helpers] = useField(name);
   const inline = props.as == "buttons-inline";
@@ -84,3 +91,5 @@ export default function ChoiceInput(props: Props) {
     </div>
   );
 }
+
+export default withDynamicField(ChoiceInput, dynamicProps);

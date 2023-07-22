@@ -3,7 +3,7 @@ import { decorateFormData } from "@/lib/helpers/decorateFormData";
 
 import type { BaseFormProps } from "@/types";
 
-import TextInput from "../fields/textInput";
+import TextInput from "@/components/contribution/fields/text/textInput";
 
 export default function CommonOptions({ formik, config }: BaseFormProps) {
   // to do pass fetched files here?

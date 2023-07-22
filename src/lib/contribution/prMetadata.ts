@@ -1,8 +1,8 @@
-import { PrMetadata, FormDataItem } from "@/types";
+import { PrMetadata, DecoratedDataItem } from "@/types";
 
-function deepReport(formData: FormDataItem): string {
+function deepReport(decorated: DecoratedDataItem): string {
   let r = "";
-  const report = (fields: FormDataItem, depth = 2) => {
+  const report = (fields: DecoratedDataItem, depth = 2) => {
     Object.values(fields).forEach((item) => {
       // we only deal with objects here
       if (typeof item !== "object") {
@@ -18,22 +18,22 @@ function deepReport(formData: FormDataItem): string {
       }
     });
   };
-  report(formData);
+  report(decorated);
   return r.trim();
 }
 
 const prMetadata: PrMetadata = ({
-  formData,
+  decorated,
   config: {
     contribution: { title },
   },
 }) => {
-  const itemName = formData.title?.data || formData.name?.data;
+  const itemName = decorated.title?.data || decorated.name?.data;
   return {
     title: `Add ${title}${itemName ? `: ${itemName}` : ""}`,
     message: `This PR adds a new ${title}:
 
-${deepReport(formData)}`,
+${deepReport(decorated)}`,
   };
 };
 

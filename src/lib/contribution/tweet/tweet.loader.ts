@@ -41,15 +41,12 @@ export default function tweetConfig({
         },
         quoteUrl: {
           type: "text",
-          title: "Quote URL",
+          title: ({ decorated }) => `${decorated.quoteType?.markdown} URL`,
           placeholder: "e.g. https://twitter.com/[user]/status/[id]",
           transform: (value) => value.split("?")[0].trim(),
-          iframe: ({ field, meta }) => {
-            if (!field.value || meta.error) return null;
-            const encodedUrl = encodeURIComponent(field.value);
-            return `https://twitframe.com/show?url=${encodedUrl}`;
-          },
-          visible: ({ formik }) => !!formik.values.quoteType,
+          iframe: (value) =>
+            `https://twitframe.com/show?url=${encodeURIComponent(value)}`,
+          hidden: ({ data }) => !data.quoteType,
           validation: {
             yup: string().when("quoteType", {
               is: (quoteType: string) => !!quoteType, // if quote type is set

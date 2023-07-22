@@ -21,8 +21,8 @@ function ConfirmationModalInner({
   config: ConfigWithContribution;
 }) {
   const destructured = destructureMeta(body);
-  const { formData } = decorateFormData({ ...destructured, config });
-  return <Report formData={formData} />;
+  const { decorated } = decorateFormData({ ...destructured, config });
+  return <Report decorated={decorated} />;
 }
 
 export default function ConfirmationModal(props: Props) {

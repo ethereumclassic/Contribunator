@@ -1,24 +1,27 @@
 import { useField } from "formik";
 import { HiPlus } from "react-icons/hi";
 
-import type { Fields, ValidationTypes } from "@/types";
+import type { Dynamic, UnwrapDynamic, Fields, ValidationTypes } from "@/types";
 
-import FieldHeader from "../common/fieldHeader";
-import RemoveButton from "../common/removeButton";
+import FieldHeader from "@/components/contribution/common/fieldHeader";
+import RemoveButton from "@/components/contribution/common/removeButton";
 
-import FormFields from ".";
+import FormFields from "../formFields";
+import withDynamicField from "../withDynamicField";
 
 export type Props = {
   name: string;
-  title: string;
+  title: Dynamic<string>;
   fields: Fields;
-  info?: string;
-  infoLink?: string;
-  addButton?: boolean | string;
+  info?: Dynamic<string>;
+  infoLink?: Dynamic<string>;
+  addButton?: Dynamic<boolean | string>;
   validation?: ValidationTypes;
 };
 
-export default function CollectionInput({
+const dynamicProps = ["title", "info", "infoLink", "addButton"] as const;
+
+function CollectionInput({
   validation,
   title,
   fields,
@@ -26,7 +29,7 @@ export default function CollectionInput({
   info,
   infoLink,
   addButton,
-}: Props) {
+}: UnwrapDynamic<Props, (typeof dynamicProps)[number]>) {
   const [field, meta, helpers] = useField(name);
   const limit = validation?.max || 0;
   const collection = field?.value || [];
@@ -105,3 +108,5 @@ export default function CollectionInput({
     </>
   );
 }
+
+export default withDynamicField(CollectionInput, dynamicProps);

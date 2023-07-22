@@ -1,26 +1,30 @@
 import { useField } from "formik";
 
-import FieldHeader from "../common/fieldHeader";
+import FieldHeader from "@/components/contribution/common/fieldHeader";
+
+import type { UnwrapDynamic, ValidationTypes } from "@/types";
+
+import withDynamicField from "../withDynamicField";
 
 import ImageInput, {
   Props as ImageInputProps,
   defaultInfo,
   MB,
   Image,
+  dynamicImageProps,
 } from "./imageInput";
-import { ValidationTypes } from "@/types";
 
 export type Props = ImageInputProps & {
   validation?: ValidationTypes;
   totalFileSizeLimit?: number;
 };
 
-export default function ImagesInput({
+function ImagesInput({
   validation,
   totalFileSizeLimit = defaultInfo.fileSizeLimit,
   fileSizeLimit = 0,
   ...props
-}: Props) {
+}: UnwrapDynamic<Props, (typeof dynamicImageProps)[number]>) {
   const { name, title } = {
     ...{ ...defaultInfo, title: "Upload Images" },
     ...props,
@@ -88,3 +92,5 @@ export default function ImagesInput({
     </div>
   );
 }
+
+export default withDynamicField(ImagesInput, dynamicImageProps);

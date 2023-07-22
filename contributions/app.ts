@@ -19,7 +19,7 @@ export default function dappContribution(): ContributionLoaded {
   // todo pass in other fields?
   return {
     imagePath: "content/services/apps/images/",
-    imageName: ({ data: { title } }) => title,
+    imageName: ({ data }) => data.title,
     useFilesOnServer: {
       apps: "content/services/apps/apps.collection.yaml",
     },
@@ -27,7 +27,7 @@ export default function dappContribution(): ContributionLoaded {
       files,
       images,
       data: { url, title, description, image: _i, links = [], ...rest },
-      formData: { image },
+      decorated: { image },
     }) => {
       // TODO option to pass image resizing / aspect ratio.
       return {

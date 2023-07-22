@@ -41,7 +41,7 @@ export type Data = any; // { [key: string]: DataItem; };
 
 export type Body = Meta & Data;
 
-export type FormDataItem =
+export type DecoratedDataItem =
   | {
       data?: Data;
       field?: Field;
@@ -52,10 +52,10 @@ export type FormDataItem =
       filePath?: string;
       markdown?: string;
     }
-  | { [key: string]: FormDataItem | FormDataItem[] };
+  | { [key: string]: DecoratedDataItem | DecoratedDataItem[] };
 
-export type FormData = {
-  [key: string]: FormDataItem;
+export type DecoratedData = {
+  [key: string]: DecoratedDataItem;
 };
 
 export type FetchData = {
@@ -98,7 +98,7 @@ export type PrMetadata = (props: {
   meta: Meta;
   data: Data;
   config: ConfigWithContribution;
-  formData: FormData;
+  decorated: DecoratedData;
   images?: ExtractedImagesFlat;
   files?: FetchedFiles;
   timestamp?: string;
@@ -121,7 +121,7 @@ export type CommitInputs = {
   images: ExtractedImagesFlat;
   title: string;
   message: string;
-  formData: FormData;
+  decorated: DecoratedData;
   branch: string;
   config: ConfigWithContribution;
   meta: Meta;

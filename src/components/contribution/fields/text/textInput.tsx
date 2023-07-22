@@ -1,14 +1,12 @@
-import { Field, FieldInputProps, FieldMetaProps, useField } from "formik";
+import { Field, useField } from "formik";
 import { HiX } from "react-icons/hi";
 
-import FieldHeader from "../common/fieldHeader";
-import Iframe from "../common/iframe";
+import type { Dynamic, UnwrapDynamic } from "@/types";
 
-// TODO move these types in to a config
-export type DynamicTextProps = {
-  field: FieldInputProps<string>;
-  meta: FieldMetaProps<unknown>;
-};
+import FieldHeader from "@/components/contribution/common/fieldHeader";
+import Iframe from "@/components/contribution/common/iframe";
+
+import withDynamicField from "../withDynamicField";
 
 export type Suggestion = {
   has?: string;
@@ -19,15 +17,15 @@ export type Suggestion = {
 export type Suggestions = Suggestion[];
 
 export type Props = {
-  title?: string;
-  prefix?: string;
+  title?: Dynamic<string>;
+  prefix?: Dynamic<string>;
   name: string;
   type?: string;
-  info?: string;
-  infoLink?: string;
-  placeholder?: string;
+  info?: Dynamic<string>;
+  infoLink?: Dynamic<string>;
+  placeholder?: Dynamic<string>;
   transform?: (value: string) => string;
-  iframe?: (props: DynamicTextProps) => string | null;
+  iframe?: (value: string) => string;
   suggestions?: Suggestions;
   tags?: string[];
   clear?: boolean;
@@ -43,7 +41,15 @@ export type Props = {
     | "datetime-local";
 };
 
-export default function TextInput({
+const dynamicProps = [
+  "title",
+  "prefix",
+  "info",
+  "infoLink",
+  "placeholder",
+] as const;
+
+function TextInput({
   title,
   name,
   prefix,
@@ -57,7 +63,7 @@ export default function TextInput({
   placeholder,
   infoLink,
   tags,
-}: Props) {
+}: UnwrapDynamic<Props, (typeof dynamicProps)[number]>) {
   const [field, meta, helpers] = useField(name);
   const styles = [
     as === "input" && "input input-bordered",
@@ -80,7 +86,7 @@ export default function TextInput({
       })
       .map(({ message }) => message);
 
-  const iframeUrl = iframe && iframe({ field, meta });
+  const iframeUrl = field.value && !meta.error && iframe && iframe(field.value);
   return (
     <div className="form-control">
       <FieldHeader
@@ -157,3 +163,5 @@ export default function TextInput({
     </div>
   );
 }
+
+export default withDynamicField(TextInput, dynamicProps);
