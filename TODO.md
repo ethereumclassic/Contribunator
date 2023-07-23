@@ -4,14 +4,10 @@ Below are the upcoming features and improvements.
 
 ### Code Quality / Polish
 
-- add explorers and endpoints to list
-- fix whitespace bug tags
-- multiple links option.
-
 - Better typing in decorated form data
-- test it works with `field`, `fields` fields and other fuckery
 - Cleanup, replace all `any` types
 - Allow users to handle 404s
+- multiple links in one PR
 
 ### Update Docs
 
