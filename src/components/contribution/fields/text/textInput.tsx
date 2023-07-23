@@ -113,8 +113,9 @@ function TextInput({
               className={`w-full ${styles}`}
               placeholder={placeholder}
               onBlur={() => {
-                const val = tags ? field.value : (field.value || "").trim();
-                helpers.setValue(val === "" ? undefined : val);
+                const val = field.value || "";
+                const newVal = tags ? val : val.trim();
+                helpers.setValue(newVal.trim() === "" ? undefined : newVal);
               }}
               onChange={({
                 target: { value },
