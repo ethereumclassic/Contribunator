@@ -40,7 +40,7 @@ test("tweet retweet", async ({ f }) => {
 
   await f.cannotSubmit(["Required retweet URL"]);
 
-  await f.setText("Quote URL", "https://twitter.com/test/status/123");
+  await f.setText("Retweet URL", "https://twitter.com/test/status/123");
 
   expect(await f.submit()).toMatchObject({
     req: {
@@ -82,7 +82,7 @@ test("tweet reply", async ({ f }) => {
     "Required unless retweeting or uploading images",
   ]);
 
-  await f.setText("Quote URL", "https://twitter.com/test/status/456");
+  await f.setText("Reply URL", "https://twitter.com/test/status/456");
 
   await f.cannotSubmit(["Required unless retweeting or uploading images"]);
 
@@ -171,7 +171,7 @@ test("tweet reply with images and alts", async ({ f }) => {
     "Required unless retweeting or uploading images",
   ]);
 
-  await f.setText("Quote URL", "https://twitter.com/test/status/456");
+  await f.setText("Reply URL", "https://twitter.com/test/status/456");
 
   await f.cannotSubmit(["Required unless retweeting or uploading images"]);
 
@@ -265,7 +265,7 @@ retweetText("retweet with tweetTextRequired", async ({ f }) => {
     "Required retweet URL",
     "Required unless uploading images",
   ]);
-  await f.setText("Quote URL", "https://twitter.com/test/status/456");
+  await f.setText("Retweet URL", "https://twitter.com/test/status/456");
   await f.cannotSubmit(["Required unless uploading images"]);
   await f.setText("Tweet Text", "Requried Retweet Text Here");
   expect(await f.submit()).toMatchObject({

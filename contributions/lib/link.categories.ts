@@ -176,11 +176,8 @@ const catConfig: Categories = {
         sourcePath: sources.endpoint,
         sourceKey: "endpoints",
         links: [
-          {
-            name: "Homepage URL",
-            required: "Homepage Required",
-          },
-          { name: "JSON RPC API URL", required: "RPC URL Required" },
+          { name: "Homepage URL" },
+          { name: "JSON RPC API URL", required: true },
         ],
         keyMap: {
           ...keyMap,
@@ -197,10 +194,7 @@ const catConfig: Categories = {
         sourcePath: sources.explorers,
         sourceKey: "explorers",
         links: [
-          {
-            name: "Mainnet URL",
-            required: true,
-          },
+          { name: "Mainnet URL" },
           { name: "Kotti URL" },
           { name: "Mordor URL" },
         ],
@@ -215,6 +209,7 @@ const catConfig: Categories = {
         title: "Network Monitor",
         sourcePath: sources.monitors,
         sourceKey: "monitors",
+        showDescription: true,
       },
       repo: {
         showDescription: true,
