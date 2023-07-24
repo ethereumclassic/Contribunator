@@ -6,6 +6,8 @@ import { createContext, useContext } from "react";
 export const FormContext = createContext<{
   formik: FormikContext;
   config: ConfigWithContribution;
+  // TODO fix this
+  // @ts-ignore
 }>({});
 
 export function useForm() {

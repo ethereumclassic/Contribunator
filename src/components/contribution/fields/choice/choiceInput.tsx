@@ -33,16 +33,20 @@ export type Props = {
 };
 
 const dynamicProps = ["title", "info"] as const;
+type DynamicProps = (typeof dynamicProps)[number];
 
-export type ChoiceCompProps = Omit<Props, "name"> & {
+// TODO fix this in UnwrapDynamic
+type NonDynamic = Omit<Props, DynamicProps | "name">;
+type Unwrapped = NonDynamic &
+  UnwrapDynamic<Pick<Props, DynamicProps>, DynamicProps>;
+
+export type ChoiceCompProps = Unwrapped & {
   handleChange: (value: string | undefined) => void;
   field: { value?: string | string[] };
   inline?: boolean;
 };
 
-function ChoiceInput(
-  props: UnwrapDynamic<Props, (typeof dynamicProps)[number]>
-) {
+function ChoiceInput(props: UnwrapDynamic<Props, DynamicProps>) {
   const { multiple, validation, name } = props;
   const [field, meta, helpers] = useField(name);
   const inline = props.as == "buttons-inline";
