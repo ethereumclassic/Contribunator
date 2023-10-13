@@ -5,7 +5,7 @@ const sources = {
   wallets: "content/services/wallets/index.yaml",
   exchanges: "content/services/exchanges/index.yaml",
   channels: "content/community/channels/index.yaml",
-  tooling: "content/community/channels/index.yaml",
+  tooling: "content/development/tooling/index.yaml",
   endpoint: "content/network/endpoints/index.yaml",
   pools: "content/mining/pools/index.yaml",
   explorers: "content/network/explorers/index.yaml",
