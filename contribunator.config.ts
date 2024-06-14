@@ -39,7 +39,7 @@ const config: UserConfig = {
           title: "Application",
           icon: HiCursorClick,
           color: "purple",
-          description: "A dapp or protocol to appear in the services section.",
+          description: "A dapp or smart contract protocol to appear in the services section. It must include a Smart Contract deployed to ETC.",
           form: {
             title: "Submit a Decentralized App",
             description:
