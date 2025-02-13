@@ -42,7 +42,7 @@ export default function tweetConfig({
         quoteUrl: {
           type: "text",
           title: ({ decorated }) => `${decorated.quoteType?.markdown} URL`,
-          placeholder: "e.g. https://twitter.com/[user]/status/[id]",
+          placeholder: "e.g. https://x.com/[user]/status/[id]",
           transform: (value) => value.split("?")[0].trim(),
           iframe: (value) =>
             `https://twitframe.com/show?url=${encodeURIComponent(value)}`,
@@ -60,11 +60,11 @@ export default function tweetConfig({
                       });
                     }
                     const regexPattern =
-                      /https:\/\/twitter\.com\/([\w]+)\/status\/(\d+)/;
+                      /https:\/\/(?:twitter\.com|x\.com)\/([\w]+)\/status\/(\d+)/;
                     if (!text || !text.match(regexPattern)) {
                       return ctx.createError({
                         message:
-                          "Must match format https://twitter.com/[user]/status/[id]",
+                          "Must match format https://twitter.com/[user]/status/[id] or https://x.com/[user]/status/[id]",
                       });
                     }
                     // TODO automatically transform this serverside for easier API usage?
