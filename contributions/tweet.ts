@@ -15,7 +15,12 @@ export default function tweetConfig({
     contributions: {
       tweet: tweet({
         title: `Suggest a Tweet for ${account}`,
-        options: { retweetTextRequired: true },
+        options: {
+          // X only allows quoting / replying to the account's own posts or
+          // posts that mention it, so plain retweets must be possible
+          retweetTextRequired: false,
+          account: account.replace(/^@/, ""),
+        },
         form: {
           description: `${description} Please check the repository rules before submitting to increase the chances that your tweet is accepted.`,
           fields: {

@@ -7,8 +7,55 @@ export const testPr = {
   title: "This is my test commit",
 };
 
+// scheduled tweet ledger used by the cron route test
+export const testLedger = {
+  "tweets/due.tweet": {
+    status: "pending",
+    scheduled: "2020-01-02T03:04:00.000Z",
+  },
+  "tweets/future.tweet": {
+    status: "pending",
+    scheduled: "2099-01-02T03:04:00.000Z",
+  },
+  "tweets/done.tweet": {
+    status: "published",
+    scheduled: "2020-01-01T00:00:00.000Z",
+  },
+};
+
+export const dispatched: {
+  repo: string;
+  event_type: string;
+  client_payload: any;
+}[] = [];
+
 class Mocktokit {
   constructor() {}
+
+  // test cron route
+  async request(route: string, params: any) {
+    if (route === "GET /repos/{owner}/{repo}/contents/{path}") {
+      if (params.repo === "_E2E_tweets") {
+        return {
+          data: {
+            content: Buffer.from(JSON.stringify(testLedger)).toString("base64"),
+          },
+        };
+      }
+      const error: any = new Error("Not Found");
+      error.status = 404;
+      throw error;
+    }
+    if (route === "POST /repos/{owner}/{repo}/dispatches") {
+      dispatched.push({
+        repo: params.repo,
+        event_type: params.event_type,
+        client_payload: params.client_payload,
+      });
+      return { status: 204 };
+    }
+    throw new Error(`Mocktokit: unhandled request ${route}`);
+  }
 
   // test pullRequestHandler
   rest = {

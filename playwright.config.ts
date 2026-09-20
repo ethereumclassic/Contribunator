@@ -58,6 +58,13 @@ const config: PlaywrightTestConfig = {
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 640, height: 640 },
+        // optionally use a system / nix provided chromium instead of the
+        // playwright download, e.g. PLAYWRIGHT_CHROMIUM_PATH=$(which chromium)
+        ...(process.env.PLAYWRIGHT_CHROMIUM_PATH && {
+          launchOptions: {
+            executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH,
+          },
+        }),
       },
     },
   ],

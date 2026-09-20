@@ -45,7 +45,7 @@ test("tweet retweet", async ({ f }) => {
   expect(await f.submit()).toMatchObject({
     req: {
       quoteType: "retweet",
-      quoteUrl: "https://twitter.com/test/status/123",
+      quoteUrl: "https://x.com/test/status/123",
     },
     res: {
       commit: {
@@ -54,7 +54,7 @@ test("tweet retweet", async ({ f }) => {
           {
             files: {
               "tweets/timestamp-add-retweet-test.tweet": `---
-retweet: https://twitter.com/test/status/123
+retweet: https://x.com/test/status/123
 ---`,
             },
             message: "Add retweet test",
@@ -62,7 +62,7 @@ retweet: https://twitter.com/test/status/123
         ],
       },
       pr: {
-        body: `This Pull Request creates a new retweet of https://twitter.com/test/status/123.
+        body: `This Pull Request creates a new retweet of https://x.com/test/status/123.
 
 There is no text in the tweet.${f.FOOTER}`,
         head: "c11r/timestamp-add-retweet-test",
@@ -91,7 +91,7 @@ test("tweet reply", async ({ f }) => {
   expect(await f.submit()).toMatchObject({
     req: {
       quoteType: "reply",
-      quoteUrl: "https://twitter.com/test/status/456",
+      quoteUrl: "https://x.com/test/status/456",
       text: "Tweet Reply Here",
     },
     res: {
@@ -101,7 +101,7 @@ test("tweet reply", async ({ f }) => {
           {
             files: {
               "tweets/timestamp-add-reply-test-tweet-reply-here.tweet": `---
-reply: https://twitter.com/test/status/456
+reply: https://x.com/test/status/456
 ---
 
 Tweet Reply Here`,
@@ -111,7 +111,7 @@ Tweet Reply Here`,
         ],
       },
       pr: {
-        body: `This Pull Request creates a new reply to https://twitter.com/test/status/456.${f.FOOTER}`,
+        body: `This Pull Request creates a new reply to https://x.com/test/status/456.${f.FOOTER}`,
         head: "c11r/timestamp-add-reply-test-tweet-reply-here",
         title: "Add reply test tweet reply here",
       },
@@ -210,7 +210,7 @@ test("tweet reply with images and alts", async ({ f }) => {
         },
       ],
       quoteType: "reply",
-      quoteUrl: "https://twitter.com/test/status/456",
+      quoteUrl: "https://x.com/test/status/456",
       text: "Tweet Reply Here",
     },
     res: {
@@ -228,7 +228,7 @@ test("tweet reply with images and alts", async ({ f }) => {
               "media/timestamp-add-reply-test-with-media-tweet-reply-here-some-1.png":
                 "[converted:png:iVBORw]",
               "tweets/timestamp-add-reply-test-with-media-tweet-reply-here.tweet": `---
-reply: https://twitter.com/test/status/456
+reply: https://x.com/test/status/456
 media:
   - file: timestamp-add-reply-test-with-media-tweet-reply-here-my.jpeg
     alt: My Kitten
@@ -245,7 +245,7 @@ Tweet Reply Here`,
         ],
       },
       pr: {
-        body: `This Pull Request creates a new reply to https://twitter.com/test/status/456 with 4 images.${f.FOOTER}`,
+        body: `This Pull Request creates a new reply to https://x.com/test/status/456 with 4 images.${f.FOOTER}`,
         head: "c11r/timestamp-add-reply-test-with-media-tweet-reply-here",
         title: "Add reply test with media tweet reply here",
       },
@@ -271,7 +271,7 @@ retweetText("retweet with tweetTextRequired", async ({ f }) => {
   expect(await f.submit()).toMatchObject({
     req: {
       quoteType: "retweet",
-      quoteUrl: "https://twitter.com/test/status/456",
+      quoteUrl: "https://x.com/test/status/456",
       text: "Requried Retweet Text Here",
     },
   });
@@ -287,6 +287,156 @@ retweetText("media with tweetTextRequired", async ({ f }) => {
   expect(await f.submit()).toMatchObject({
     req: {
       contribution: "tweetTextRequired",
+    },
+  });
+});
+
+const accountTest = formTest({
+  repo: "_E2E_tweets",
+  contribution: "tweetAccount",
+});
+
+accountTest("normalizes pasted links", async ({ f }) => {
+  await f.clickButton("Quote Type", "Retweet");
+  await f.setText(
+    "Retweet URL",
+    "https://mobile.twitter.com/test/status/123?s=20&t=abc#m"
+  );
+  expect(await f.getValue("Retweet URL")).toBe("https://x.com/test/status/123");
+  await f.hasText(
+    "iframe: https://platform.twitter.com/embed/Tweet.html?id=123&dnt=true"
+  );
+  expect(await f.submit()).toMatchObject({
+    req: { quoteType: "retweet", quoteUrl: "https://x.com/test/status/123" },
+    res: {
+      commit: {
+        changes: [
+          {
+            files: {
+              "tweets/timestamp-add-retweet-test.tweet": `---
+retweet: https://x.com/test/status/123
+---`,
+            },
+          },
+        ],
+      },
+      pr: {
+        body: `This Pull Request creates a new retweet of https://x.com/test/status/123.
+
+There is no text in the tweet.${f.FOOTER}`,
+      },
+    },
+  });
+});
+
+accountTest("rejects malformed links", async ({ f }) => {
+  await f.clickButton("Quote Type", "Retweet");
+  await f.setText("Retweet URL", "https://example.com/test/status/123");
+  await f.cannotSubmit(["Must match format https://x.com/[user]/status/[id]"]);
+  await f.setText("Retweet URL", "https://x.com/test/status/abc");
+  await f.cannotSubmit(["Must match format https://x.com/[user]/status/[id]"]);
+});
+
+const THIRD_PARTY_QUOTE =
+  "X only allows @eth_classic to quote posts written by @eth_classic or that mention @eth_classic. This post is by @test. Remove the tweet text to make this a plain retweet, or write a standalone tweet with the link instead.";
+const THIRD_PARTY_REPLY =
+  "X only allows @eth_classic to reply to posts written by @eth_classic or that mention @eth_classic. This post is by @test. Write a standalone tweet with the link instead.";
+
+accountTest("blocks quoting third party posts", async ({ f }) => {
+  await f.clickButton("Quote Type", "Retweet");
+  await f.setText("Retweet URL", "https://x.com/test/status/123");
+  await f.setText("Tweet Text", "Look at this");
+  await f.cannotSubmit([THIRD_PARTY_QUOTE]);
+  // removing the text makes it a plain retweet, which is allowed
+  await f.setText("Tweet Text", "");
+  await f.hasNoText(THIRD_PARTY_QUOTE);
+  expect(await f.submit()).toMatchObject({
+    req: { quoteType: "retweet", quoteUrl: "https://x.com/test/status/123" },
+  });
+});
+
+accountTest("allows quoting own posts", async ({ f }) => {
+  await f.clickButton("Quote Type", "Retweet");
+  await f.setText("Retweet URL", "https://x.com/eth_classic/status/1001");
+  await f.setText("Tweet Text", "Look at this");
+  expect(await f.submit()).toMatchObject({
+    req: {
+      quoteType: "retweet",
+      quoteUrl: "https://x.com/eth_classic/status/1001",
+      text: "Look at this",
+    },
+  });
+});
+
+accountTest("allows quoting posts that mention the account", async ({ f }) => {
+  await f.clickButton("Quote Type", "Retweet");
+  await f.setText("Retweet URL", "https://x.com/someone/status/1002");
+  await f.setText("Tweet Text", "Thanks for the mention");
+  expect(await f.submit()).toMatchObject({
+    req: { quoteUrl: "https://x.com/someone/status/1002" },
+  });
+});
+
+accountTest("blocks replying to third party posts", async ({ f }) => {
+  await f.clickButton("Quote Type", "Reply");
+  await f.setText("Reply URL", "https://x.com/test/status/123");
+  await f.setText("Tweet Text", "Replying");
+  await f.cannotSubmit([THIRD_PARTY_REPLY]);
+  await f.setText("Reply URL", "https://x.com/eth_classic/status/1001");
+  await f.hasNoText(THIRD_PARTY_REPLY);
+  expect(await f.submit()).toMatchObject({
+    req: {
+      quoteType: "reply",
+      quoteUrl: "https://x.com/eth_classic/status/1001",
+      text: "Replying",
+    },
+  });
+});
+
+accountTest("blocks posts that do not exist", async ({ f }) => {
+  await f.clickButton("Quote Type", "Retweet");
+  await f.setText("Retweet URL", "https://x.com/test/status/404");
+  await f.cannotSubmit([
+    "Post not found. It may have been deleted, or the account may be protected.",
+  ]);
+});
+
+accountTest("schedules a tweet", async ({ f }) => {
+  // a week from now, at the minute, in UTC
+  const date = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  date.setUTCSeconds(0, 0);
+  const iso = date.toISOString(); // YYYY-MM-DDTHH:mm:00.000Z
+  const input = iso.slice(0, 16); // YYYY-MM-DDTHH:mm
+
+  await f.setText("Tweet Text", "Future news");
+  await f.setInputValue("Schedule (UTC)", "2020-01-02T03:04");
+  await f.cannotSubmit(["Must be at least 30 minutes in the future"]);
+  await f.setInputValue("Schedule (UTC)", "2099-01-02T03:04");
+  await f.cannotSubmit(["Must be within 365 days"]);
+  await f.setInputValue("Schedule (UTC)", input);
+  // exact local time depends on the browser time zone
+  await f.hasTextContaining("Local: ");
+  expect(await f.submit()).toMatchObject({
+    req: { text: "Future news", schedule: input },
+    res: {
+      commit: {
+        changes: [
+          {
+            files: {
+              "tweets/timestamp-add-tweet-future-news.tweet": `---
+schedule: ${iso}
+---
+
+Future news`,
+            },
+          },
+        ],
+      },
+      pr: {
+        body: `This Pull Request creates a new tweet.
+
+Scheduled to be published at ${iso}. Merging this Pull Request will not publish it immediately.${f.FOOTER}`,
+      },
     },
   });
 });
