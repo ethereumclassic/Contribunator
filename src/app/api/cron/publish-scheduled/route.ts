@@ -19,8 +19,8 @@ import Octokit from "@/lib/server/octokit";
 
 export const dynamic = "force-dynamic";
 
-export const LEDGER_PATH = ".github/published-tweets.json";
-export const EVENT_TYPE = "publish-scheduled-tweets";
+const LEDGER_PATH = ".github/published-tweets.json";
+const EVENT_TYPE = "publish-scheduled-tweets";
 
 type LedgerEntry = { status: string; scheduled?: string };
 type Ledger = { [filename: string]: LedgerEntry };
