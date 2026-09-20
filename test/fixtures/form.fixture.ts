@@ -59,6 +59,10 @@ export class FormFixture {
     await expect(this.page.getByText(text, { exact: true })).toBeVisible();
   }
 
+  async hasTextContaining(text: string) {
+    await expect(this.page.getByText(text).first()).toBeVisible();
+  }
+
   async hasNoText(text: string) {
     await expect(this.page.getByText(text, { exact: true })).not.toBeVisible();
   }
@@ -130,6 +134,13 @@ export class FormFixture {
     if (await locator.isVisible()) {
       await locator.blur();
     }
+  }
+
+  // for inputs that are not textboxes, e.g. datetime-local
+  async setInputValue(fieldTitle: string, value: string) {
+    const locator = this.getByLabel(fieldTitle).locator("input");
+    await locator.fill(value);
+    await locator.blur();
   }
 
   async clickButton(fieldTitle: string, items: string | string[]) {

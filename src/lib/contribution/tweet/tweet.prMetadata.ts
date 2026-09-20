@@ -1,6 +1,8 @@
 import slugify from "@/lib/helpers/slugify";
 
 import type { Image, PrMetadata } from "@/types";
+import { normalizeTweetUrl, parseTweetRef } from "./tweetUrl";
+import { scheduleToIso } from "./tweetSchedule";
 
 const tweetPrMetadata: PrMetadata = ({
   data,
@@ -10,6 +12,7 @@ const tweetPrMetadata: PrMetadata = ({
     quoteType?: string;
     quoteUrl?: string;
     text?: string;
+    schedule?: string;
   };
 }) => {
   // todo poll, etc.
@@ -18,7 +21,8 @@ const tweetPrMetadata: PrMetadata = ({
   let title = data.quoteType || "tweet";
 
   if (data.quoteType && data.quoteUrl) {
-    title += " " + data.quoteUrl.split("/")[3];
+    const ref = parseTweetRef(data.quoteUrl);
+    title += " " + (ref?.username || ref?.id || data.quoteUrl.split("/")[3]);
   }
 
   if (mediaCount) {
@@ -36,7 +40,7 @@ const tweetPrMetadata: PrMetadata = ({
   if (data.quoteType && data.quoteUrl) {
     message += ` ${data.quoteType} ${
       data.quoteType === "retweet" ? "of" : "to"
-    } ${data.quoteUrl}`;
+    } ${normalizeTweetUrl(data.quoteUrl)}`;
   } else {
     message += " tweet";
   }
@@ -49,6 +53,13 @@ const tweetPrMetadata: PrMetadata = ({
 
   if (!data.text) {
     message += `\n\nThere is no text in the tweet.`;
+  }
+
+  const schedule = scheduleToIso(data.schedule);
+  if (schedule) {
+    // the `schedule` front matter is what actually delays publishing; merging
+    // this pull request does not publish a scheduled tweet
+    message += `\n\nScheduled to be published at ${schedule}. Merging this Pull Request will not publish it immediately.`;
   }
 
   return { title, message };

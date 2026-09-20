@@ -118,6 +118,12 @@ export default async function testConfig(): Promise<UserConfig> {
               retweetTextRequired: true,
             },
           }),
+          tweetAccount: tweet({
+            title: "Account Tweet",
+            options: {
+              account: "eth_classic",
+            },
+          }),
         },
       },
     },

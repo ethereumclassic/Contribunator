@@ -10,6 +10,10 @@ export type TweetConfigInput = ContributionCommonOptions & {
     retweet?: boolean;
     reply?: boolean;
     retweetTextRequired?: boolean;
+    /** handle of the posting account (without @), enables reply/quote checks */
+    account?: string;
+    /** show the optional schedule field, default true */
+    schedule?: boolean;
   };
 };
 
