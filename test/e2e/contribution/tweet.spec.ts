@@ -406,11 +406,11 @@ accountTest("blocks posts that do not exist", async ({ f }) => {
 });
 
 accountTest("schedules a tweet", async ({ f }) => {
-  // a week from now, at the minute, in UTC
+  // a week from now, on the half hour, in UTC
   const date = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  date.setUTCSeconds(0, 0);
-  const iso = date.toISOString(); // YYYY-MM-DDTHH:mm:00.000Z
-  const input = iso.slice(0, 16); // YYYY-MM-DDTHH:mm
+  date.setUTCMinutes(30, 0, 0);
+  const iso = date.toISOString(); // YYYY-MM-DDTHH:30:00.000Z
+  const input = iso.slice(0, 16); // YYYY-MM-DDTHH:30
 
   await f.setText("Tweet Text", "Future news");
   await f.selectOption("Schedule", "UTC");
@@ -423,8 +423,12 @@ accountTest("schedules a tweet", async ({ f }) => {
   expect(((await picker.getAttribute("max")) as string) > min).toBe(true);
   await f.setInputValue("Schedule", "2020-01-02T03:04");
   await f.cannotSubmit(["Must be at least 30 minutes in the future"]);
-  await f.setInputValue("Schedule", "2099-01-02T03:04");
+  await f.setInputValue("Schedule", "2099-01-02T03:00");
   await f.cannotSubmit(["Must be within 365 days"]);
+  // off the 30-minute grid
+  await f.setInputValue("Schedule", input.slice(0, 14) + "15");
+  await f.cannotSubmit(["Must be on the hour or half hour"]);
+  await f.hasTextContaining("Checks run every 30 minutes");
   await f.setInputValue("Schedule", input);
   await f.hasTextContaining(`🌐 ${input.slice(11, 16)} UTC`);
   expect(await f.submit()).toMatchObject({
@@ -472,9 +476,9 @@ Merging this Pull Request queues the tweet. It publishes automatically at that t
 });
 
 accountTest("converts the picked time zone to UTC", async ({ f }) => {
-  // a week from now, typed as a US Eastern wall time
+  // a week from now, on the hour, typed as a US Eastern wall time
   const date = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  date.setUTCSeconds(0, 0);
+  date.setUTCMinutes(0, 0, 0);
   const wall = date.toISOString().slice(0, 16);
   const expected = wallToUtc(wall, "America/New_York");
   expect(expected).not.toBe(wall); // Eastern is never UTC

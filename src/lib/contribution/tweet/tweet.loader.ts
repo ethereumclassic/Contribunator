@@ -18,6 +18,8 @@ import { scheduleToDate } from "./tweetSchedule";
 
 const MIN_SCHEDULE_MINUTES = 30;
 const MAX_SCHEDULE_DAYS = 365;
+// scheduled tweets are published by a check that runs every 30 minutes
+const SCHEDULE_STEP_MINUTES = 30;
 
 export default function tweetConfig({
   options = {},
@@ -194,6 +196,11 @@ export default function tweetConfig({
                   if (minutes > MAX_SCHEDULE_DAYS * 24 * 60) {
                     return ctx.createError({
                       message: `Must be within ${MAX_SCHEDULE_DAYS} days`,
+                    });
+                  }
+                  if (date.getUTCMinutes() % SCHEDULE_STEP_MINUTES !== 0) {
+                    return ctx.createError({
+                      message: "Must be on the hour or half hour",
                     });
                   }
                   return true;
