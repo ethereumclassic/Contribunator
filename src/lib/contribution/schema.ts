@@ -61,7 +61,7 @@ export default function generateSchema(
       }
 
       // otherwise generate the schema
-      if (type === "text") {
+      if (type === "text" || type === "datetime") {
         schema[name] = string();
       }
 

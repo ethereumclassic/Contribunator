@@ -13,6 +13,7 @@ import type {
 
 import type { Props as ChoiceInput } from "@/components/contribution/fields/choice/choiceInput";
 import type { Props as CollectionInput } from "@/components/contribution/fields/collection/collectionInput";
+import type { Props as DatetimeInput } from "@/components/contribution/fields/datetime/datetimeInput";
 import type { Props as ImageInput } from "@/components/contribution/fields/image/imageInput";
 import type { Props as ImagesInput } from "@/components/contribution/fields/image/imagesInput";
 import type { Props as InfoField } from "@/components/contribution/fields/info/infoField";
@@ -27,12 +28,20 @@ export type {
 
 export type Choice = { type: "choice" } & Omit<ChoiceInput, "name">;
 export type Collection = { type: "collection" } & Omit<CollectionInput, "name">;
+export type Datetime = { type: "datetime" } & Omit<DatetimeInput, "name">;
 export type Image = { type: "image" } & Omit<ImageInput, "name">;
 export type Images = { type: "images" } & Omit<ImagesInput, "name">;
 export type Info = { type: "info" } & Omit<InfoField, "name">;
 export type Text = { type: "text" } & Omit<TextInput, "name">;
 
-type GenericField = Choice | Collection | Image | Images | Info | Text;
+type GenericField =
+  | Choice
+  | Collection
+  | Datetime
+  | Image
+  | Images
+  | Info
+  | Text;
 
 export type RegexValidation = {
   regex: RegExp;

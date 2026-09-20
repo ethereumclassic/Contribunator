@@ -1,6 +1,13 @@
-// The schedule field is a `datetime-local` input interpreted as UTC, e.g.
-// "2030-01-02T03:04". It is stored as typed and converted to ISO 8601 when
-// the pull request is created.
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+// The schedule is stored in the form as a UTC wall time, "2030-01-02T03:04".
+// The picker lets the user type it in their own time zone (or UTC) and
+// converts; the pull request and tweet file get ISO 8601.
 
 export function scheduleToDate(value?: string | null): Date | null {
   const raw = (value || "").trim();
@@ -14,40 +21,81 @@ export function scheduleToIso(value?: string | null): string | null {
   return date ? date.toISOString() : null;
 }
 
-export function describeSchedule(value?: string | null): string {
-  const date = scheduleToDate(value);
-  if (!date) {
-    return "Optional, publishes later";
+export const SCHEDULE_ZONES: {
+  flag: string;
+  label: string;
+  short: string;
+  timeZone: string;
+}[] = [
+  { flag: "🌐", label: "UTC", short: "UTC", timeZone: "UTC" },
+  {
+    flag: "🇺🇸",
+    label: "Eastern",
+    short: "US Eastern",
+    timeZone: "America/New_York",
+  },
+  {
+    flag: "🇨🇳",
+    label: "China Standard Time",
+    short: "China",
+    timeZone: "Asia/Shanghai",
+  },
+];
+
+export function browserTimeZone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  } catch (err) {
+    return "UTC";
   }
-  const local = date.toLocaleString(undefined, {
-    month: "short",
+}
+
+// "2030-01-02T03:04" typed in `tz` -> the same instant as a UTC wall time
+export function wallToUtc(wall: string, tz: string): string {
+  const d = tz === "UTC" ? dayjs.utc(wall) : dayjs.tz(wall, tz);
+  return d.isValid() ? d.utc().format("YYYY-MM-DDTHH:mm") : "";
+}
+
+// stored UTC wall time -> wall time in `tz`, for showing an existing value
+export function utcToWall(value: string | undefined, tz: string): string {
+  const date = scheduleToDate(value);
+  return date ? dayjs(date).tz(tz).format("YYYY-MM-DDTHH:mm") : "";
+}
+
+function fmt(date: Date, timeZone: string, opts: Intl.DateTimeFormatOptions) {
+  return new Intl.DateTimeFormat("en-GB", { ...opts, timeZone }).format(date);
+}
+
+const time = (date: Date, tz: string) =>
+  fmt(date, tz, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+
+// one line under the picker, e.g.
+//   📅 Mon 21 Sep · 🌐 07:00 UTC · 🇺🇸 03:00 US Eastern · 🇨🇳 15:00 China
+export function summarizeSchedule(value: string | undefined): string {
+  const date = scheduleToDate(value);
+  if (!date) return "";
+  const day = fmt(date, "UTC", {
+    weekday: "short",
     day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
+    month: "short",
   });
-  return `Local: ${local}`;
+  return [
+    `📅 ${day}`,
+    ...SCHEDULE_ZONES.map(
+      ({ flag, short, timeZone }) => `${flag} ${time(date, timeZone)} ${short}`
+    ),
+  ].join(" · ");
 }
 
 // Human readable schedule for the pull request description, e.g.
 //
-//   🗓 Scheduled for Monday 21 September 2026
+//   📅 Scheduled for Monday, 21 September 2026
 //
 //   🌐 07:00 UTC
 //   🇺🇸 03:00 Eastern
 //   🇨🇳 15:00 China Standard Time
 //
 // A zone whose calendar date differs from the UTC date gets it appended.
-const ZONES: { flag: string; label: string; timeZone: string }[] = [
-  { flag: "🌐", label: "UTC", timeZone: "UTC" },
-  { flag: "🇺🇸", label: "Eastern", timeZone: "America/New_York" },
-  { flag: "🇨🇳", label: "China Standard Time", timeZone: "Asia/Shanghai" },
-];
-
-function fmt(date: Date, timeZone: string, opts: Intl.DateTimeFormatOptions) {
-  return new Intl.DateTimeFormat("en-GB", { ...opts, timeZone }).format(date);
-}
-
 export function describeScheduleForPr(iso: string): string {
   const date = new Date(iso);
   const longDate = (tz: string) =>
@@ -59,19 +107,17 @@ export function describeScheduleForPr(iso: string): string {
     });
   const shortDate = (tz: string) =>
     fmt(date, tz, { weekday: "short", day: "numeric", month: "short" });
-  const time = (tz: string) =>
-    fmt(date, tz, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 
   const utcDay = longDate("UTC");
-  const lines = ZONES.map(({ flag, label, timeZone }) => {
+  const lines = SCHEDULE_ZONES.map(({ flag, label, timeZone }) => {
     const sameDay = longDate(timeZone) === utcDay;
-    return `${flag} ${time(timeZone)} ${label}${
+    return `${flag} ${time(date, timeZone)} ${label}${
       sameDay ? "" : ` (${shortDate(timeZone)})`
     }`;
   });
 
   return [
-    `🗓 Scheduled for ${utcDay}`,
+    `📅 Scheduled for ${utcDay}`,
     "",
     ...lines,
     "",

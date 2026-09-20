@@ -1,6 +1,9 @@
 import { expect } from "@playwright/test";
 import formTest from "@/../test/fixtures/form.fixture";
-import { describeScheduleForPr } from "@/lib/contribution/tweet/tweetSchedule";
+import {
+  describeScheduleForPr,
+  wallToUtc,
+} from "@/lib/contribution/tweet/tweetSchedule";
 
 const test = formTest({ repo: "_E2E_tweets", contribution: "tweet" });
 
@@ -410,13 +413,13 @@ accountTest("schedules a tweet", async ({ f }) => {
   const input = iso.slice(0, 16); // YYYY-MM-DDTHH:mm
 
   await f.setText("Tweet Text", "Future news");
-  await f.setInputValue("Schedule (UTC)", "2020-01-02T03:04");
+  await f.selectOption("Schedule", "UTC");
+  await f.setInputValue("Schedule", "2020-01-02T03:04");
   await f.cannotSubmit(["Must be at least 30 minutes in the future"]);
-  await f.setInputValue("Schedule (UTC)", "2099-01-02T03:04");
+  await f.setInputValue("Schedule", "2099-01-02T03:04");
   await f.cannotSubmit(["Must be within 365 days"]);
-  await f.setInputValue("Schedule (UTC)", input);
-  // exact local time depends on the browser time zone
-  await f.hasTextContaining("Local: ");
+  await f.setInputValue("Schedule", input);
+  await f.hasTextContaining(`🌐 ${input.slice(11, 16)} UTC`);
   expect(await f.submit()).toMatchObject({
     req: { text: "Future news", schedule: input },
     res: {
@@ -444,7 +447,7 @@ ${describeScheduleForPr(iso)}${f.FOOTER}`,
 
 test("formats the schedule for humans", async () => {
   expect(describeScheduleForPr("2026-09-21T07:00:00.000Z")).toBe(
-    `🗓 Scheduled for Monday, 21 September 2026
+    `📅 Scheduled for Monday, 21 September 2026
 
 🌐 07:00 UTC
 🇺🇸 03:00 Eastern
@@ -454,9 +457,41 @@ Merging this Pull Request queues the tweet. It publishes automatically at that t
   );
   // a zone on a different calendar day says so
   expect(describeScheduleForPr("2026-12-21T02:30:00.000Z")).toContain(
-    "🇺🇸 21:30 Eastern (Sat 20 Dec)"
+    "🇺🇸 21:30 Eastern (Sun 20 Dec)"
   );
   expect(describeScheduleForPr("2026-12-21T02:30:00.000Z")).toContain(
     "🇨🇳 10:30 China Standard Time\n"
   );
+});
+
+accountTest("converts the picked time zone to UTC", async ({ f }) => {
+  // a week from now, typed as a US Eastern wall time
+  const date = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  date.setUTCSeconds(0, 0);
+  const wall = date.toISOString().slice(0, 16);
+  const expected = wallToUtc(wall, "America/New_York");
+  expect(expected).not.toBe(wall); // Eastern is never UTC
+
+  await f.setText("Tweet Text", "Timezones");
+  await f.selectOption("Schedule", "America/New_York");
+  await f.setInputValue("Schedule", wall);
+  await f.hasTextContaining(`🇺🇸 ${wall.slice(11, 16)} US Eastern`);
+  await f.hasTextContaining(`🌐 ${expected.slice(11, 16)} UTC`);
+  expect(await f.submit()).toMatchObject({ req: { schedule: expected } });
+});
+
+test("converts wall times between zones", async () => {
+  // September: New York is UTC-4
+  expect(wallToUtc("2026-09-21T03:00", "America/New_York")).toBe(
+    "2026-09-21T07:00"
+  );
+  // December: New York is UTC-5
+  expect(wallToUtc("2026-12-21T03:00", "America/New_York")).toBe(
+    "2026-12-21T08:00"
+  );
+  expect(wallToUtc("2026-09-21T15:00", "Asia/Shanghai")).toBe(
+    "2026-09-21T07:00"
+  );
+  expect(wallToUtc("2026-09-21T07:00", "UTC")).toBe("2026-09-21T07:00");
+  expect(wallToUtc("garbage", "UTC")).toBe("");
 });

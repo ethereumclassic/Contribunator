@@ -6,6 +6,7 @@ import ImageInput from "./image/imageInput";
 import ImagesInput from "./image/imagesInput";
 import InfoField from "./info/infoField";
 import CollectionInput from "./collection/collectionInput";
+import DatetimeInput from "./datetime/datetimeInput";
 
 const components: any = {
   text: TextInput,
@@ -14,6 +15,7 @@ const components: any = {
   images: ImagesInput,
   info: InfoField,
   collection: CollectionInput,
+  datetime: DatetimeInput,
 };
 
 export default function FormFields({ fields }: { fields: Fields }) {

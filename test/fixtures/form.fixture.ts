@@ -136,6 +136,11 @@ export class FormFixture {
     }
   }
 
+  // select by option value (the browser's own zone is labelled differently)
+  async selectOption(fieldTitle: string, value: string) {
+    await this.getByLabel(fieldTitle).locator("select").selectOption(value);
+  }
+
   // for inputs that are not textboxes, e.g. datetime-local
   async setInputValue(fieldTitle: string, value: string) {
     const locator = this.getByLabel(fieldTitle).locator("input");

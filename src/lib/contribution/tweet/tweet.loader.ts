@@ -14,7 +14,7 @@ import {
   tweetEmbedUrl,
 } from "./tweetUrl";
 import { checkQuotePolicy, lookupTweet, QuoteKind } from "./tweetLookup";
-import { describeSchedule, scheduleToDate } from "./tweetSchedule";
+import { scheduleToDate } from "./tweetSchedule";
 
 const MIN_SCHEDULE_MINUTES = 30;
 const MAX_SCHEDULE_DAYS = 365;
@@ -172,10 +172,9 @@ export default function tweetConfig({
         },
         ...(schedule && {
           schedule: {
-            type: "text",
-            input: "datetime-local",
-            title: "Schedule (UTC)",
-            info: ({ value }) => describeSchedule(value),
+            type: "datetime",
+            title: "Schedule",
+            info: "Optional, publishes later",
             validation: {
               yup: string().test({
                 test(value, ctx) {
