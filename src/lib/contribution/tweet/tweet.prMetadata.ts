@@ -2,7 +2,7 @@ import slugify from "@/lib/helpers/slugify";
 
 import type { Image, PrMetadata } from "@/types";
 import { normalizeTweetUrl, parseTweetRef } from "./tweetUrl";
-import { scheduleToIso } from "./tweetSchedule";
+import { describeScheduleForPr, scheduleToIso } from "./tweetSchedule";
 
 const tweetPrMetadata: PrMetadata = ({
   data,
@@ -59,7 +59,7 @@ const tweetPrMetadata: PrMetadata = ({
   if (schedule) {
     // the `schedule` front matter is what actually delays publishing; merging
     // this pull request does not publish a scheduled tweet
-    message += `\n\nScheduled to be published at ${schedule}. Merging this Pull Request will not publish it immediately.`;
+    message += `\n\n${describeScheduleForPr(schedule)}`;
   }
 
   return { title, message };

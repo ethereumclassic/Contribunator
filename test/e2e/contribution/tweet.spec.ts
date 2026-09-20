@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import formTest from "@/../test/fixtures/form.fixture";
+import { describeScheduleForPr } from "@/lib/contribution/tweet/tweetSchedule";
 
 const test = formTest({ repo: "_E2E_tweets", contribution: "tweet" });
 
@@ -435,8 +436,27 @@ Future news`,
       pr: {
         body: `This Pull Request creates a new tweet.
 
-Scheduled to be published at ${iso}. Merging this Pull Request will not publish it immediately.${f.FOOTER}`,
+${describeScheduleForPr(iso)}${f.FOOTER}`,
       },
     },
   });
+});
+
+test("formats the schedule for humans", async () => {
+  expect(describeScheduleForPr("2026-09-21T07:00:00.000Z")).toBe(
+    `🗓 Scheduled for Monday, 21 September 2026
+
+🌐 07:00 UTC
+🇺🇸 03:00 Eastern
+🇨🇳 15:00 China Standard Time
+
+Merging this Pull Request queues the tweet. It publishes automatically at that time, not on merge.`
+  );
+  // a zone on a different calendar day says so
+  expect(describeScheduleForPr("2026-12-21T02:30:00.000Z")).toContain(
+    "🇺🇸 21:30 Eastern (Sat 20 Dec)"
+  );
+  expect(describeScheduleForPr("2026-12-21T02:30:00.000Z")).toContain(
+    "🇨🇳 10:30 China Standard Time\n"
+  );
 });
