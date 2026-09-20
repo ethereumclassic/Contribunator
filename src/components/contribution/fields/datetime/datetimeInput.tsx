@@ -23,6 +23,10 @@ export type Props = {
 
 const dynamicProps = ["title", "info"] as const;
 
+// keep in sync with the schedule validation in tweet.loader.ts
+const MIN_MINUTES = 30;
+const MAX_DAYS = 365;
+
 // A date-time picker with a time zone selector. The user types a time in
 // their own zone (default) or another zone; the form value is always the
 // equivalent UTC wall time, which is what the rest of the pipeline expects.
@@ -58,6 +62,15 @@ function DatetimeInput({
   const summary =
     field.value && !meta.error ? summarizeSchedule(field.value) : info;
 
+  // the native picker greys out anything outside [min, max], expressed in
+  // the selected zone; the schema enforces the same limits on submit
+  const now = Date.now();
+  const min = utcToWall(new Date(now + MIN_MINUTES * 60000).toISOString(), tz);
+  const max = utcToWall(
+    new Date(now + MAX_DAYS * 24 * 60 * 60000).toISOString(),
+    tz
+  );
+
   return (
     <div className="form-control">
       <FieldHeader
@@ -72,6 +85,8 @@ function DatetimeInput({
           type="datetime-local"
           className="input input-bordered flex-auto min-w-0"
           value={wall}
+          min={min}
+          max={max}
           onChange={(e) => update(e.target.value, tz)}
           onBlur={() => helpers.setTouched(true)}
         />

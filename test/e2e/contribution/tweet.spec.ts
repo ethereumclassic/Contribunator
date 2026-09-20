@@ -414,6 +414,13 @@ accountTest("schedules a tweet", async ({ f }) => {
 
   await f.setText("Tweet Text", "Future news");
   await f.selectOption("Schedule", "UTC");
+  // the native picker refuses the past: min is at least 30 minutes ahead
+  const picker = f.getByLabel("Schedule").locator("input");
+  const min = (await picker.getAttribute("min")) as string;
+  expect(new Date(`${min}Z`).getTime()).toBeGreaterThan(
+    Date.now() + 29 * 60000
+  );
+  expect(((await picker.getAttribute("max")) as string) > min).toBe(true);
   await f.setInputValue("Schedule", "2020-01-02T03:04");
   await f.cannotSubmit(["Must be at least 30 minutes in the future"]);
   await f.setInputValue("Schedule", "2099-01-02T03:04");
