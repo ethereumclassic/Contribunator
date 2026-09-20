@@ -19,7 +19,10 @@ import Octokit from "@/lib/server/octokit";
 
 export const dynamic = "force-dynamic";
 
+// the action keeps the ledger on its own branch, so that a protected default
+// branch (pull requests only) does not block the workflow from writing it
 const LEDGER_PATH = ".github/published-tweets.json";
+const LEDGER_BRANCH = "published-tweets";
 const EVENT_TYPE = "publish-scheduled-tweets";
 
 type LedgerEntry = { status: string; scheduled?: string };
@@ -80,6 +83,7 @@ async function checkRepo(
           owner: repo.owner,
           repo: repo.name,
           path: LEDGER_PATH,
+          ref: LEDGER_BRANCH,
           headers: { "cache-control": "no-cache" },
         }
       );
