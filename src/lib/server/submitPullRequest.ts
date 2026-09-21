@@ -40,9 +40,15 @@ export type CreatePullRequestOutputs = {
   title: string;
 };
 
+const AUTO_MERGE_MUTATION = `mutation ($pullRequestId: ID!, $mergeMethod: PullRequestMergeMethod!) {
+  enablePullRequestAutoMerge(input: { pullRequestId: $pullRequestId, mergeMethod: $mergeMethod }) {
+    clientMutationId
+  }
+}`;
+
 export default async function submitPullRequest({
   authorized,
-  config: { repo },
+  config: { repo, contribution },
   transformed: { files, title, branch, message },
 }: CreatePullRequestInputs): Promise<{
   pr: CreatePullRequestOutputs;
@@ -140,6 +146,28 @@ export default async function submitPullRequest({
       }),
   ]);
 
+  // auto-merge: the pull request merges itself once the branch protection
+  // rules are met. Best effort: the pull request exists either way.
+  let autoMerge: E2ETestResponse["autoMerge"];
+  if (contribution.autoMerge) {
+    autoMerge = {
+      pullRequestId: data.node_id,
+      mergeMethod: (contribution.autoMerge === true
+        ? "merge"
+        : contribution.autoMerge
+      ).toUpperCase() as "MERGE" | "SQUASH" | "REBASE",
+    };
+    try {
+      await octokit.graphql(AUTO_MERGE_MUTATION, autoMerge);
+      log.info("auto-merge enabled", { number: data.number });
+    } catch (err) {
+      log.warn("could not enable auto-merge", {
+        number: data.number,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
   return {
     pr: {
       url: data.html_url,
@@ -147,6 +175,6 @@ export default async function submitPullRequest({
       title: data.title,
     },
     // in test mode return the submitted commit and data
-    test: e2e ? { pr, commit } : undefined,
+    test: e2e ? { pr, commit, ...(autoMerge && { autoMerge }) } : undefined,
   };
 }

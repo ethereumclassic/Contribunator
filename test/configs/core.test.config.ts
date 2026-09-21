@@ -120,6 +120,7 @@ export default async function testConfig(): Promise<UserConfig> {
           }),
           tweetAccount: tweet({
             title: "Account Tweet",
+            autoMerge: true,
             options: {
               account: "eth_classic",
             },

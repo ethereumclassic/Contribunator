@@ -3,9 +3,12 @@ import tweet from "@/lib/contribution/tweet";
 export default function tweetConfig({
   account,
   description,
+  autoMerge = false,
 }: {
   account: string;
   description: string;
+  /** merge tweet pull requests automatically once approved */
+  autoMerge?: boolean;
 }) {
   return {
     title: `${account} tweets`,
@@ -15,6 +18,7 @@ export default function tweetConfig({
     contributions: {
       tweet: tweet({
         title: `Suggest a Tweet for ${account}`,
+        autoMerge,
         options: {
           // X only allows quoting / replying to the account's own posts or
           // posts that mention it, so plain retweets must be possible

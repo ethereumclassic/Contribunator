@@ -23,11 +23,8 @@ const config: UserConfig = {
       account: "@eth_classic",
       description:
         "Tweet to the main ETC Twitter Account. Suggested tweets should remain professional, relevant and neutral.",
-    }),
-    "tweets-etc_network": tweet({
-      account: "@ETC_Network",
-      description:
-        "Tweet to the secondary ETC Twitter Account. Compared to the main account, there are are less restrictions. Use this account for less neutral, more spicy content.",
+      // merges itself once it has the required approvals and a green preview
+      autoMerge: true,
     }),
     "ethereumclassic.github.io": {
       title: "EthereumClassic.org Website",
@@ -39,7 +36,8 @@ const config: UserConfig = {
           title: "Application",
           icon: HiCursorClick,
           color: "purple",
-          description: "A dapp or smart contract protocol to appear in the services section. It must include a Smart Contract deployed to ETC.",
+          description:
+            "A dapp or smart contract protocol to appear in the services section. It must include a Smart Contract deployed to ETC.",
           form: {
             title: "Submit a Decentralized App",
             description:

@@ -17,7 +17,7 @@ import prMetadata from "./prMetadata";
 export default function contribution(
   options: ContributionOptions
 ): ContributionConfig {
-  const { title, description, color, icon, hidden } = options;
+  const { title, description, color, icon, hidden, autoMerge } = options;
   // we return an object that contains inexpensive metadata
   // and a function that can be used to load the contribution
   const meta = {
@@ -26,6 +26,7 @@ export default function contribution(
     color: color || ("slate" as TailwindColor),
     icon: icon || BiGitPullRequest,
     hidden,
+    autoMerge,
   };
 
   return {

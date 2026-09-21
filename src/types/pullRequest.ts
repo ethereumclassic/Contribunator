@@ -180,4 +180,8 @@ export type GithubCreatePR = {
 export type E2ETestResponse = {
   pr: GithubCreatePR;
   commit: GithubCreateCommit;
+  autoMerge?: {
+    pullRequestId: string;
+    mergeMethod: "MERGE" | "SQUASH" | "REBASE";
+  };
 };

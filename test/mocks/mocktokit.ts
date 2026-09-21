@@ -32,6 +32,14 @@ export const dispatched: {
 class Mocktokit {
   constructor() {}
 
+  // auto-merge mutation
+  async graphql(query: string, variables: any) {
+    if (!query.includes("enablePullRequestAutoMerge")) {
+      throw new Error(`Mocktokit: unhandled graphql ${query.slice(0, 40)}`);
+    }
+    return { enablePullRequestAutoMerge: { clientMutationId: null } };
+  }
+
   // test cron route
   async request(route: string, params: any) {
     if (route === "GET /repos/{owner}/{repo}/contents/{path}") {
@@ -86,6 +94,7 @@ class Mocktokit {
             html_url: testPr.url,
             title: testPr.title,
             number: testPr.number,
+            node_id: "PR_node_123",
           },
         };
       },

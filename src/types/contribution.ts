@@ -22,12 +22,21 @@ export type UseFiles =
 
 export type UseData = (props: FetchData) => Promise<FetchedData>;
 
+export type MergeMethod = "merge" | "squash" | "rebase";
+
 export type ContributionMeta = {
   title: string;
   description: string;
   color: TailwindColor;
   icon: IconType;
   hidden?: boolean;
+  /**
+   * Enable GitHub auto-merge on the pull requests this contribution creates,
+   * so they merge on their own once the branch protection rules (reviews,
+   * checks) are satisfied. Needs "Allow auto-merge" in the repository
+   * settings. `true` uses a merge commit.
+   */
+  autoMerge?: boolean | MergeMethod;
 };
 
 export type FormOverrides = DeepPartial<Form>;
