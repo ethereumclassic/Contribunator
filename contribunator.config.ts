@@ -23,8 +23,9 @@ const config: UserConfig = {
       account: "@eth_classic",
       description:
         "Tweet to the main ETC Twitter Account. Suggested tweets should remain professional, relevant and neutral.",
-      // merges itself once it has the required approvals and a green preview
-      autoMerge: true,
+      // scheduled tweets merge themselves once approved (merging does not
+      // publish them); immediate tweets still need a human to merge
+      autoMerge: "schedule",
     }),
     "ethereumclassic.github.io": {
       title: "EthereumClassic.org Website",

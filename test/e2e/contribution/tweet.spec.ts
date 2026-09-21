@@ -359,21 +359,21 @@ accountTest("blocks quoting third party posts", async ({ f }) => {
   });
 });
 
-accountTest("allows quoting own posts, enables auto-merge", async ({ f }) => {
-  await f.clickButton("Quote Type", "Retweet");
-  await f.setText("Retweet URL", "https://x.com/eth_classic/status/1001");
-  await f.setText("Tweet Text", "Look at this");
-  expect(await f.submit()).toMatchObject({
-    req: {
+accountTest(
+  "allows quoting own posts, no auto-merge when unscheduled",
+  async ({ f }) => {
+    await f.clickButton("Quote Type", "Retweet");
+    await f.setText("Retweet URL", "https://x.com/eth_classic/status/1001");
+    await f.setText("Tweet Text", "Look at this");
+    const { req, res } = await f.submit();
+    expect(req).toMatchObject({
       quoteType: "retweet",
       quoteUrl: "https://x.com/eth_classic/status/1001",
       text: "Look at this",
-    },
-    res: {
-      autoMerge: { pullRequestId: "PR_node_123", mergeMethod: "MERGE" },
-    },
-  });
-});
+    });
+    expect(res.autoMerge).toBeUndefined();
+  }
+);
 
 test("does not enable auto-merge unless configured", async ({ f }) => {
   await f.setText("Tweet Text", "Plain");
@@ -442,6 +442,8 @@ accountTest("schedules a tweet", async ({ f }) => {
   await f.hasTextContaining(`🌐 ${input.slice(11, 16)} UTC`);
   expect(await f.submit()).toMatchObject({
     req: { text: "Future news", schedule: input },
+    // scheduled: merges itself once approved
+    res: { autoMerge: { pullRequestId: "PR_node_123", mergeMethod: "MERGE" } },
     res: {
       commit: {
         changes: [

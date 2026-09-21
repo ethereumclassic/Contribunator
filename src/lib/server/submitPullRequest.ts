@@ -9,10 +9,12 @@ import type {
   ConfigWithContribution,
   TransformedPR,
   Authorized,
+  Body,
   E2ETestResponse,
   GithubCreateCommit,
   GithubCreatePR,
 } from "@/types";
+import { destructureMeta } from "@/lib/helpers/destructureMeta";
 
 import { e2e, githubApp } from "@/lib/env.server";
 
@@ -32,6 +34,7 @@ export type CreatePullRequestInputs = {
   authorized: Authorized;
   config: ConfigWithContribution;
   transformed: TransformedPR;
+  body: Body;
 };
 
 export type CreatePullRequestOutputs = {
@@ -50,6 +53,7 @@ export default async function submitPullRequest({
   authorized,
   config: { repo, contribution },
   transformed: { files, title, branch, message },
+  body,
 }: CreatePullRequestInputs): Promise<{
   pr: CreatePullRequestOutputs;
   test?: E2ETestResponse;
@@ -149,13 +153,17 @@ export default async function submitPullRequest({
   // auto-merge: the pull request merges itself once the branch protection
   // rules are met. Best effort: the pull request exists either way.
   let autoMerge: E2ETestResponse["autoMerge"];
-  if (contribution.autoMerge) {
+  const setting =
+    typeof contribution.autoMerge === "function"
+      ? contribution.autoMerge(destructureMeta(body))
+      : contribution.autoMerge;
+  if (setting) {
     autoMerge = {
       pullRequestId: data.node_id,
-      mergeMethod: (contribution.autoMerge === true
-        ? "merge"
-        : contribution.autoMerge
-      ).toUpperCase() as "MERGE" | "SQUASH" | "REBASE",
+      mergeMethod: (setting === true ? "merge" : setting).toUpperCase() as
+        | "MERGE"
+        | "SQUASH"
+        | "REBASE",
     };
     try {
       await octokit.graphql(AUTO_MERGE_MUTATION, autoMerge);

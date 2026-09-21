@@ -6,6 +6,7 @@ import {
   FetchData,
   FetchFiles,
   FetchedData,
+  Meta,
   PrMetadata,
 } from "./pullRequest";
 import { Form } from "./form";
@@ -23,6 +24,7 @@ export type UseFiles =
 export type UseData = (props: FetchData) => Promise<FetchedData>;
 
 export type MergeMethod = "merge" | "squash" | "rebase";
+export type AutoMerge = boolean | MergeMethod;
 
 export type ContributionMeta = {
   title: string;
@@ -34,9 +36,9 @@ export type ContributionMeta = {
    * Enable GitHub auto-merge on the pull requests this contribution creates,
    * so they merge on their own once the branch protection rules (reviews,
    * checks) are satisfied. Needs "Allow auto-merge" in the repository
-   * settings. `true` uses a merge commit.
+   * settings. `true` uses a merge commit. A function decides per submission.
    */
-  autoMerge?: boolean | MergeMethod;
+  autoMerge?: AutoMerge | ((props: { data: Data; meta: Meta }) => AutoMerge);
 };
 
 export type FormOverrides = DeepPartial<Form>;

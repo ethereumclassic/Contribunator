@@ -37,6 +37,7 @@ export default async function postContribution(req: NextRequest) {
       transformed,
       authorized,
       config,
+      body: validated,
     });
 
     return NextResponse.json(data);

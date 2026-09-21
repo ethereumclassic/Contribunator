@@ -7,8 +7,8 @@ export default function tweetConfig({
 }: {
   account: string;
   description: string;
-  /** merge tweet pull requests automatically once approved */
-  autoMerge?: boolean;
+  /** merge tweet pull requests automatically once approved; "schedule" for scheduled tweets only */
+  autoMerge?: boolean | "schedule";
 }) {
   return {
     title: `${account} tweets`,
