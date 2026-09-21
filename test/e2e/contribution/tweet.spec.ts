@@ -442,9 +442,9 @@ accountTest("schedules a tweet", async ({ f }) => {
   await f.hasTextContaining(`🌐 ${input.slice(11, 16)} UTC`);
   expect(await f.submit()).toMatchObject({
     req: { text: "Future news", schedule: input },
-    // scheduled: merges itself once approved
-    res: { autoMerge: { pullRequestId: "PR_node_123", mergeMethod: "MERGE" } },
     res: {
+      // scheduled: merges itself once approved
+      autoMerge: { pullRequestId: "PR_node_123", mergeMethod: "MERGE" },
       commit: {
         changes: [
           {
