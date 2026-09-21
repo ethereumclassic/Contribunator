@@ -102,6 +102,21 @@ export default async function submitPullRequest({
   log.info("pr", { pr });
   const { data } = await octokit.rest.pulls.create(pr);
 
+  // one searchable line per pull request saying who made it: the GitHub
+  // login, the API key name, or the auth type (captcha / anon)
+  log.info("created pull request", {
+    number: data.number,
+    url: data.html_url,
+    repo: `${repo.owner}/${repo.name}`,
+    authorization: authorized.type,
+    by:
+      authorized.type === "github"
+        ? authorized.token.login
+        : authorized.type === "api"
+        ? authorized.user
+        : authorized.type,
+  });
+
   // add tags and reviwer status
   await Promise.all([
     repo.addLabels &&
