@@ -78,29 +78,21 @@ export function lookupTweet(id: string): Promise<TweetLookup | null> {
   return pending;
 }
 
-export type QuoteKind = "reply" | "quote" | "retweet";
-
 /**
- * X only lets an account reply to or quote posts that it wrote itself or
- * that mention it. Returns an error message, or `undefined` if allowed.
- * Plain retweets are always allowed.
+ * X may refuse to let an account reply to posts that it did not write and
+ * that don't mention it. Returns a warning, or `undefined` if the post is
+ * certainly fine.
  */
-export function checkQuotePolicy(
+export function checkReplyPolicy(
   post: TweetLookup,
-  kind: QuoteKind,
   account: string
 ): string | undefined {
-  if (kind === "retweet") return;
   const handle = account.replace(/^@/, "").toLowerCase();
   const author = post.username.toLowerCase();
   const mentioned = post.mentions.some((m) => m.toLowerCase() === handle);
   if (author === handle || mentioned) return;
-  const verb = kind === "reply" ? "reply to" : "quote";
   return (
-    `X only allows @${handle} to ${verb} posts written by @${handle} or that mention @${handle}. ` +
-    `This post is by @${post.username}. ` +
-    (kind === "quote"
-      ? "Remove the tweet text to make this a plain retweet, or write a standalone tweet with the link instead."
-      : "Write a standalone tweet with the link instead.")
+    `X may refuse to let @${handle} reply to this post because it is by @${post.username} and does not mention @${handle}. ` +
+    "If publishing fails, put the link in a standalone tweet."
   );
 }

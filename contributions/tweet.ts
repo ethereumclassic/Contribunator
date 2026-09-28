@@ -20,8 +20,9 @@ export default function tweetConfig({
         title: `Suggest a Tweet for ${account}`,
         autoMerge,
         options: {
-          // X only allows quoting / replying to the account's own posts or
-          // posts that mention it, so plain retweets must be possible
+          // plain retweets must be possible; X may refuse replies to posts
+          // that don't mention the account (quotes are published as a link
+          // in the text, which works around that)
           retweetTextRequired: false,
           account: account.replace(/^@/, ""),
         },

@@ -13,7 +13,7 @@ import {
   parseTweetRef,
   tweetEmbedUrl,
 } from "./tweetUrl";
-import { checkQuotePolicy, lookupTweet, QuoteKind } from "./tweetLookup";
+import { checkReplyPolicy, lookupTweet } from "./tweetLookup";
 import { scheduleToDate } from "./tweetSchedule";
 
 const MIN_SCHEDULE_MINUTES = 30;
@@ -60,10 +60,18 @@ export default function tweetConfig({
           type: "text",
           title: ({ decorated }) => `${decorated.quoteType?.markdown} URL`,
           placeholder: `e.g. ${TWEET_URL_FORMAT}`,
-          info: handle
-            ? `Quotes and replies only for @${handle} posts or mentions`
-            : undefined,
           transform: normalizeTweetUrl,
+          // X may refuse replies to posts that don't mention the account; we
+          // can't know for sure, so this doesn't block submission. Quotes are
+          // published as a link in the text, which X always accepts.
+          warning: handle
+            ? async ({ value, data }) => {
+                const ref = parseTweetRef(value);
+                if (!ref || data.quoteType !== "reply") return;
+                const post = await lookupTweet(ref.id);
+                return post ? checkReplyPolicy(post, handle) : undefined;
+              }
+            : undefined,
           iframe: tweetEmbedUrl,
           hidden: ({ data }) => !data.quoteType,
           validation: {
@@ -83,16 +91,11 @@ export default function tweetConfig({
                         message: `Must match format ${TWEET_URL_FORMAT}`,
                       });
                     }
-                    // verify the post exists and that X will accept it
+                    // verify the post exists; the reply policy is only a
+                    // warning, see `warning` above
                     if (!handle) {
                       return true;
                     }
-                    const kind: QuoteKind =
-                      ctx.parent.quoteType === "reply"
-                        ? "reply"
-                        : ctx.parent.text
-                        ? "quote"
-                        : "retweet";
                     let post;
                     try {
                       post = await lookupTweet(ref.id);
@@ -106,10 +109,6 @@ export default function tweetConfig({
                         message:
                           "Post not found. It may have been deleted, or the account may be protected.",
                       });
-                    }
-                    const message = checkQuotePolicy(post, kind, handle);
-                    if (message) {
-                      return ctx.createError({ message });
                     }
                     return true;
                   },
@@ -136,7 +135,18 @@ export default function tweetConfig({
                       message: "Do not include `---`",
                     });
                   }
-                  const tweet = twitterText.parseTweet(text);
+                  // twitter-together publishes a quote with the post link
+                  // appended to the text, X shows it as the quote
+                  const quote =
+                    ctx.parent.quoteType === "retweet" && ctx.parent.quoteUrl;
+                  if (quote && twitterText.extractUrls(text).length) {
+                    return ctx.createError({
+                      message: "Quote tweets cannot contain other links",
+                    });
+                  }
+                  const tweet = twitterText.parseTweet(
+                    quote ? `${text}\n\n${ctx.parent.quoteUrl}` : text
+                  );
                   if (!tweet.valid) {
                     return ctx.createError({
                       message: "Tweet is too long",

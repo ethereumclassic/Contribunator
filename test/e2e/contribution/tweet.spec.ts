@@ -341,22 +341,51 @@ accountTest("rejects malformed links", async ({ f }) => {
   await f.cannotSubmit(["Must match format https://x.com/[user]/status/[id]"]);
 });
 
-const THIRD_PARTY_QUOTE =
-  "X only allows @eth_classic to quote posts written by @eth_classic or that mention @eth_classic. This post is by @test. Remove the tweet text to make this a plain retweet, or write a standalone tweet with the link instead.";
 const THIRD_PARTY_REPLY =
-  "X only allows @eth_classic to reply to posts written by @eth_classic or that mention @eth_classic. This post is by @test. Write a standalone tweet with the link instead.";
+  "X may refuse to let @eth_classic reply to this post because it is by @test and does not mention @eth_classic. If publishing fails, put the link in a standalone tweet.";
 
-accountTest("blocks quoting third party posts", async ({ f }) => {
+accountTest("quotes third party posts without a warning", async ({ f }) => {
   await f.clickButton("Quote Type", "Retweet");
   await f.setText("Retweet URL", "https://x.com/test/status/123");
   await f.setText("Tweet Text", "Look at this");
-  await f.cannotSubmit([THIRD_PARTY_QUOTE]);
-  // removing the text makes it a plain retweet, which is allowed
-  await f.setText("Tweet Text", "");
-  await f.hasNoText(THIRD_PARTY_QUOTE);
+  await f.hasNoText("Warning:");
   expect(await f.submit()).toMatchObject({
-    req: { quoteType: "retweet", quoteUrl: "https://x.com/test/status/123" },
+    res: {
+      commit: {
+        changes: [
+          {
+            files: {
+              "tweets/timestamp-add-retweet-test-look-at-this.tweet": `---
+retweet: https://x.com/test/status/123
+---
+
+Look at this`,
+            },
+          },
+        ],
+      },
+    },
   });
+});
+
+accountTest("quote text cannot contain other links", async ({ f }) => {
+  await f.clickButton("Quote Type", "Retweet");
+  await f.setText("Retweet URL", "https://x.com/test/status/123");
+  await f.setText("Tweet Text", "More at https://ethereumclassic.org");
+  await f.cannotSubmit(["Quote tweets cannot contain other links"]);
+  // links are fine without the quote
+  await f.clickButton("Quote Type", "None");
+  await f.hasNoText("Quote tweets cannot contain other links");
+});
+
+accountTest("counts the quoted link in the tweet length", async ({ f }) => {
+  await f.clickButton("Quote Type", "Retweet");
+  await f.setText("Retweet URL", "https://x.com/test/status/123");
+  // 280 characters fit on their own, not with the link
+  await f.setText("Tweet Text", "a".repeat(280));
+  await f.cannotSubmit(["Tweet is too long"]);
+  await f.setText("Tweet Text", "a".repeat(255));
+  await f.hasNoText("Tweet is too long");
 });
 
 accountTest(
@@ -390,17 +419,19 @@ accountTest("allows quoting posts that mention the account", async ({ f }) => {
   });
 });
 
-accountTest("blocks replying to third party posts", async ({ f }) => {
+accountTest("warns about replying to third party posts", async ({ f }) => {
   await f.clickButton("Quote Type", "Reply");
   await f.setText("Reply URL", "https://x.com/test/status/123");
   await f.setText("Tweet Text", "Replying");
-  await f.cannotSubmit([THIRD_PARTY_REPLY]);
+  await f.hasTextContaining(THIRD_PARTY_REPLY);
   await f.setText("Reply URL", "https://x.com/eth_classic/status/1001");
   await f.hasNoText(THIRD_PARTY_REPLY);
+  await f.setText("Reply URL", "https://x.com/test/status/123");
+  await f.hasTextContaining(THIRD_PARTY_REPLY);
   expect(await f.submit()).toMatchObject({
     req: {
       quoteType: "reply",
-      quoteUrl: "https://x.com/eth_classic/status/1001",
+      quoteUrl: "https://x.com/test/status/123",
       text: "Replying",
     },
   });

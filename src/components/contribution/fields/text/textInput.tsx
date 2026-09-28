@@ -4,6 +4,9 @@ import { HiX } from "react-icons/hi";
 import type { Dynamic, UnwrapDynamic } from "@/types";
 
 import FieldHeader from "@/components/contribution/common/fieldHeader";
+import FieldWarning, {
+  Warning,
+} from "@/components/contribution/common/fieldWarning";
 import Iframe from "@/components/contribution/common/iframe";
 
 import withDynamicField from "../withDynamicField";
@@ -26,6 +29,8 @@ export type Props = {
   placeholder?: Dynamic<string>;
   transform?: (value: string) => string;
   iframe?: (value: string) => string;
+  // non-blocking notice shown under the field, may be async
+  warning?: Warning;
   suggestions?: Suggestions;
   tags?: string[];
   clear?: boolean;
@@ -59,6 +64,7 @@ function TextInput({
   info,
   transform,
   iframe,
+  warning,
   suggestions,
   placeholder,
   infoLink,
@@ -158,6 +164,9 @@ function TextInput({
             <b>Optional Suggestion: </b>
             {currentSuggestions.join(", ")}
           </div>
+        )}
+        {warning && field.value && !meta.error && (
+          <FieldWarning warning={warning} value={field.value} />
         )}
         {iframeUrl && <Iframe url={iframeUrl} />}
       </div>
