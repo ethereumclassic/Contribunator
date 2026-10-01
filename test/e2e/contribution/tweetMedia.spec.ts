@@ -438,6 +438,104 @@ base.describe("server checks", () => {
   });
 });
 
+base.describe("API uploads", () => {
+  // API_KEYS in .env.test: key1:abc123
+  const KEY = { "x-api-key": "abc123" };
+  const presign = (request: any, headers: object, body: object = {}) =>
+    request.post("/api/upload", {
+      headers,
+      data: {
+        action: "presign",
+        repo: "_E2E_tweets",
+        contribution: "tweetVideo",
+        field: "video",
+        name: "agent clip.mp4",
+        ...body,
+      },
+    });
+
+  base("needs an API key or an upload session", async ({ request }) => {
+    const none = await presign(request, {});
+    expect(none.status()).toBe(401);
+    expect((await none.json()).error).toBe("Upload session expired");
+    const wrong = await presign(request, { "x-api-key": "nope" });
+    expect((await wrong.json()).error).toBe("Invalid API key");
+    expect(
+      (await (await presign(request, KEY, { name: "a.png" })).json()).error
+    ).toBe("Unsupported file type image/png");
+  });
+
+  base("uploads with a plain PUT and submits", async ({ request }) => {
+    const res = await presign(request, KEY);
+    expect(res.status()).toBe(200);
+    const slot = await res.json();
+    expect(slot.method).toBe("PUT");
+    expect(slot.maxBytes).toBe(64 * MB);
+    expect(slot.url).toMatch(
+      new RegExp(`^${FILES}uploads/api-key1/[a-z0-9]+/agent-clip\\.mp4$`)
+    );
+    expect(slot.item).toEqual({
+      url: slot.url,
+      source: "upload",
+      kind: "video",
+      contentType: "video/mp4",
+      name: "agent clip.mp4",
+    });
+
+    // the upload URL itself enforces the limits
+    const tooBig = await request.put(slot.uploadUrl, {
+      data: Buffer.alloc(64 * MB + 1),
+    });
+    expect(tooBig.status()).toBe(403);
+    const put = await request.put(slot.uploadUrl, {
+      data: Buffer.alloc(3 * MB, 1),
+    });
+    expect(put.status()).toBe(200);
+
+    const submit = await request.post("/api/contribute", {
+      headers: KEY,
+      data: {
+        repo: "_E2E_tweets",
+        contribution: "tweetVideo",
+        authorization: "api",
+        text: "From an agent",
+        video: [{ ...slot.item, alt: "Agent clip" }],
+      },
+    });
+    const json = await submit.json();
+    expect(json.error).toBeUndefined();
+    expect(
+      json.test.commit.changes[0].files[
+        "tweets/timestamp-add-tweet-with-media-from-an-agent.tweet"
+      ]
+    ).toBe(`---
+media:
+  - url: ${slot.url}
+    alt: Agent clip
+---
+
+From an agent`);
+  });
+
+  base("issues SDK tokens to API keys too", async ({ request }) => {
+    const res = await request.post("/api/upload", {
+      headers: KEY,
+      data: {
+        action: "token",
+        repo: "_E2E_tweets",
+        contribution: "tweetVideo",
+        field: "video",
+        name: "b.mp4",
+        size: MB,
+        contentType: "video/mp4",
+      },
+    });
+    const json = await res.json();
+    expect(json.token).toMatch(/^vercel_blob_client_/);
+    expect(json.pathname).toMatch(/^uploads\/api-key1\//);
+  });
+});
+
 base("cleans up unused uploads", async ({ request }) => {
   await control(request, { reset: true });
   const put = (pathname: string, days: number, text?: string) =>

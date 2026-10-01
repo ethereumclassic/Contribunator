@@ -50,6 +50,19 @@ export const EXTENSIONS: Record<string, string> = {
   "video/mp4": "mp4",
 };
 
+/** content type from a file name, for clients that don't send one */
+export function contentTypeOfName(name: string) {
+  const ext = name.split(".").pop()?.toLowerCase();
+  const types: Record<string, string> = {
+    jpeg: "image/jpeg",
+    m4v: "video/mp4",
+  };
+  return (
+    types[ext || ""] ||
+    Object.keys(EXTENSIONS).find((type) => EXTENSIONS[type] === ext)
+  );
+}
+
 export function kindOfContentType(contentType?: string) {
   const type = (contentType || "").split(";")[0].trim().toLowerCase();
   return (Object.keys(MEDIA_TYPES) as MediaKind[]).find((kind) =>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { e2e } from "@/lib/env";
+import { contentTypeOfName } from "@/lib/media/media";
 
 // An in-memory stand-in for the Vercel Blob API, for end-to-end tests only
 // (NEXT_PUBLIC_VERCEL_BLOB_API_URL points the SDK here). It checks client
@@ -64,6 +65,27 @@ function describe(pathname: string, blob: Stored) {
 
 // what the token allows, or an error response
 function authorizeWrite(req: NextRequest, pathname: string, size?: number) {
+  // presigned: the delegation is in the query, like the real API
+  const delegation = req.nextUrl.searchParams.get("vercel-blob-delegation");
+  if (delegation) {
+    const scope = JSON.parse(
+      Buffer.from(delegation.split(".")[0], "base64url").toString()
+    );
+    if (scope.pathname !== pathname) {
+      return blobError("forbidden", "pathname does not match delegation", 403);
+    }
+    if (scope.validUntil < Date.now()) {
+      return blobError("forbidden", "delegation expired", 403);
+    }
+    if (size && scope.maximumSizeInBytes && size > scope.maximumSizeInBytes) {
+      return blobError(
+        "forbidden",
+        `the file length cannot be greater than ${scope.maximumSizeInBytes} bytes`,
+        403
+      );
+    }
+    return { allowOverwrite: false };
+  }
   const auth = req.headers.get("authorization") || "";
   const token = auth.replace(/^Bearer /, "");
   if (token.startsWith("vercel_blob_rw_")) return { allowOverwrite: true };
@@ -161,6 +183,19 @@ async function handle(req: NextRequest, path: string[]) {
     });
   }
 
+  // signed tokens for presigned URLs
+  if (req.method === "POST" && first === "signed-token") {
+    const body = await req.json();
+    const scope = { ...body, storeId: "e2estore" };
+    return NextResponse.json({
+      delegationToken: `${Buffer.from(JSON.stringify(scope)).toString(
+        "base64url"
+      )}.signature`,
+      clientSigningToken: "client-signing-token",
+      validUntil: body.validUntil,
+    });
+  }
+
   // put
   if (req.method === "PUT" && !first) {
     const pathname = search.get("pathname") || "";
@@ -174,8 +209,11 @@ async function handle(req: NextRequest, path: string[]) {
     }
     const stored = {
       body,
+      // like the real store: the SDK's header, else from the extension
       contentType:
-        req.headers.get("x-content-type") || "application/octet-stream",
+        req.headers.get("x-content-type") ||
+        contentTypeOfName(pathname) ||
+        "application/octet-stream",
       uploadedAt: new Date(),
     };
     state.blobs.set(pathname, stored);
