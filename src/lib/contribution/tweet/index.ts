@@ -3,6 +3,21 @@ import { FaTwitter } from "react-icons/fa";
 import type { ContributionCommonOptions, ContributionConfig } from "@/types";
 
 import contribution from "@/lib/contribution";
+import type { RemoteUrlOption } from "@/lib/media/media";
+
+export type TweetMediaOptions = {
+  /**
+   * Images: committed to the repository ("repo", default), uploaded to the
+   * Vercel Blob store ("blob"), or not offered (false).
+   */
+  images?: "repo" | "blob" | false;
+  /** offer a video upload (Vercel Blob store), default false */
+  video?: boolean;
+  /** maximum video size, default 512MB (X's limit) */
+  maxVideoMB?: number;
+  /** allow links to files elsewhere: true for any host, or a host list */
+  remoteUrl?: RemoteUrlOption;
+};
 
 export type TweetConfigInput = Omit<ContributionCommonOptions, "autoMerge"> & {
   /**
@@ -11,7 +26,8 @@ export type TweetConfigInput = Omit<ContributionCommonOptions, "autoMerge"> & {
    */
   autoMerge?: ContributionCommonOptions["autoMerge"] | "schedule";
   options?: {
-    media?: boolean;
+    /** `false` hides media fields */
+    media?: false | TweetMediaOptions;
     retweet?: boolean;
     reply?: boolean;
     retweetTextRequired?: boolean;

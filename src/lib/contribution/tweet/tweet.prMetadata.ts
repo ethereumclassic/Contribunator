@@ -9,6 +9,7 @@ const tweetPrMetadata: PrMetadata = ({
 }: {
   data: {
     media?: Image[];
+    video?: unknown[];
     quoteType?: string;
     quoteUrl?: string;
     text?: string;
@@ -17,6 +18,7 @@ const tweetPrMetadata: PrMetadata = ({
 }) => {
   // todo poll, etc.
   const mediaCount = data.media?.length;
+  const hasVideo = !!data.video?.length;
 
   let title = data.quoteType || "tweet";
 
@@ -25,7 +27,7 @@ const tweetPrMetadata: PrMetadata = ({
     title += " " + (ref?.username || ref?.id || data.quoteUrl.split("/")[3]);
   }
 
-  if (mediaCount) {
+  if (mediaCount || hasVideo) {
     title += " with media";
   }
 
@@ -47,6 +49,9 @@ const tweetPrMetadata: PrMetadata = ({
 
   if (mediaCount) {
     message += ` with ${mediaCount} image${mediaCount > 1 ? "s" : ""}`;
+  }
+  if (hasVideo) {
+    message += " with a video";
   }
 
   message += ".";

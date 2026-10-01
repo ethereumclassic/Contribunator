@@ -109,7 +109,12 @@ function decorateFormDataRaw({
       data: val,
     };
 
-    if (["image", "images"].includes(field.type)) {
+    if (["image", "images"].includes(field.type) && val.url) {
+      // uploaded to the blob store or linked: nothing to commit
+      item.markdown = `![${val.alt || ""}](${val.url})${
+        val.alt ? `\n*${val.alt}*` : ""
+      }`;
+    } else if (["image", "images"].includes(field.type)) {
       const title = contribution.imageName
         ? contribution.imageName({ data })
         : `${contribution.title} ${fullTitle} ${val.alt || ""}`;
@@ -120,6 +125,13 @@ function decorateFormDataRaw({
         val.alt ? `\n*${val.alt}*` : ""
       }`;
       images[item.filePath] = val.data;
+    }
+
+    if (field.type === "media") {
+      item.markdown =
+        val.kind === "video"
+          ? `[🎬 ${val.alt || val.name || "Video"}](${val.url})`
+          : `![${val.alt || ""}](${val.url})`;
     }
 
     if (field.type === "choice") {

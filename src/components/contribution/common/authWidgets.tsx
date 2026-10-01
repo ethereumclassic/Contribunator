@@ -1,4 +1,6 @@
-import { HiExclamation } from "react-icons/hi";
+import { HiCheckCircle, HiExclamation } from "react-icons/hi";
+
+import { CAPTCHA_FROM_SESSION } from "@/lib/media/media";
 
 import type { BaseFormProps } from "@/types";
 import Captcha from "./captcha";
@@ -20,6 +22,14 @@ export default function AuthWidgets({ formik, config }: BaseFormProps) {
               : "You must sign in to submit this type of contribution"}
           </div>
         </div>
+      </div>
+    );
+  }
+  if (formik.values.captcha === CAPTCHA_FROM_SESSION) {
+    // solved earlier to upload files
+    return (
+      <div className="text-sm opacity-60 flex items-center justify-center gap-1">
+        <HiCheckCircle /> CAPTCHA completed
       </div>
     );
   }

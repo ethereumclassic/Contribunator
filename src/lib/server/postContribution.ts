@@ -6,6 +6,7 @@ import log from "@/lib/log";
 import submitPullRequest from "./submitPullRequest";
 import transformPullRequest from "./transformPullRequest";
 import authorize from "./authorize";
+import { verifyMedia, writeManifest } from "./verifyMedia";
 
 export default async function postContribution(req: NextRequest) {
   try {
@@ -29,6 +30,9 @@ export default async function postContribution(req: NextRequest) {
 
     log.info("post contribution", { authorized, config: validated });
 
+    // check uploaded and linked files on the server
+    const uploads = await verifyMedia(config, validated);
+
     // transform a PR
     const transformed = await transformPullRequest({ body: validated, config });
 
@@ -38,6 +42,10 @@ export default async function postContribution(req: NextRequest) {
       authorized,
       config,
       body: validated,
+      // remember which uploads the pull request uses, so they are kept
+      beforeCommit: uploads.length
+        ? (branch) => writeManifest({ repo: config.repo.name, branch, uploads })
+        : undefined,
     });
 
     return NextResponse.json(data);

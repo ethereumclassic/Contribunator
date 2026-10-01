@@ -29,6 +29,7 @@
     "@logtail/next": "^0.1.0",
     "@octokit/auth-app": "^4.0.9",
     "@octokit/rest": "^19.0.7",
+    "@vercel/blob": "^2.8.0",
     "autoprefixer": "10.4.14",
     "daisyui": "^3.0.3",
     "dayjs": "^1.11.7",

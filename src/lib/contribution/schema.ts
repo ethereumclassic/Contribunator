@@ -1,4 +1,4 @@
-import { ObjectSchema, array, object, string } from "yup";
+import { ObjectSchema, array, mixed, number, object, string } from "yup";
 import startCase from "lodash/startCase";
 
 import type {
@@ -6,10 +6,48 @@ import type {
   Collection,
   Contribution,
   Fields,
+  Media,
   NestedChoiceOptions,
   RegexValidation,
   Repo,
 } from "@/types";
+
+import { checkRemoteUrl, kindOfContentType } from "@/lib/media/media";
+import { mediaRulesOf } from "@/lib/media/rules";
+
+// an uploaded or linked file; the server checks what the URL points to
+function mediaItemSchema(rules: NonNullable<ReturnType<typeof mediaRulesOf>>) {
+  return object({
+    // images kept in the repository have `data` instead
+    url: string().when(["pending", "data"], {
+      is: (pending: unknown, data: unknown) => !pending && !data,
+      then: (schema) =>
+        schema.required("Missing file").test({
+          test(url = "", ctx) {
+            if (ctx.parent.source === "remote") {
+              const error = checkRemoteUrl(url, rules.remoteUrl);
+              return error ? ctx.createError({ message: error }) : true;
+            }
+            return true;
+          },
+        }),
+    }),
+    source: string().oneOf(["upload", "remote"]),
+    kind: string().oneOf(rules.kinds, "Unsupported file type"),
+    contentType: string().test({
+      message: "Unsupported file type",
+      test: (type) => !type || rules.kinds.includes(kindOfContentType(type)!),
+    }),
+    size: number().max(rules.maxBytes, "File is too big"),
+    name: string().max(255),
+    alt: string().max(999),
+    // set while uploading or checking the link
+    pending: mixed().test({
+      message: "Please wait for uploads to finish",
+      test: (pending) => !pending,
+    }),
+  });
+}
 
 export const RESERVED = [
   "customTitle",
@@ -93,10 +131,24 @@ export default function generateSchema(
         }
       }
 
+      if (type === "media") {
+        const mediaField = field as Media;
+        const rules = mediaRulesOf(name, mediaField)!;
+        const max = mediaField.max || 1;
+        schema[name] = array()
+          .of(mediaItemSchema(rules))
+          .max(max, `Up to ${max} file${max > 1 ? "s" : ""}`);
+      }
+
       if (["image", "images"].includes(type)) {
+        const rules = mediaRulesOf(name, field)!;
         let data = string().test({
           test(data = "", ctx) {
             if (!data) {
+              return true;
+            }
+            // uploaded to the blob store or linked, see `url`
+            if (ctx.parent.url) {
               return true;
             }
             // if it's a jpeg or png
@@ -130,6 +182,9 @@ export default function generateSchema(
               then: (schema) => schema.required(),
             }),
           alt: string().max(999),
+          ...(rules.storage === "blob" || rules.remoteUrl
+            ? mediaItemSchema(rules).fields
+            : {}),
           editing: string().test({
             test(data = "", ctx) {
               if (data) {

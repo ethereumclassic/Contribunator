@@ -11,10 +11,22 @@ function ReportCell({ fields }: { fields: DecoratedDataItem }) {
           return (
             <div key={item.path}>
               <div className="font-bold mb-1">{item.fullTitle}</div>
-              {["image", "images"].includes(item.field.type) ? (
+              {["image", "images", "media"].includes(item.field.type) ? (
                 <div>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={item.data.data} alt={item.data.alt} />
+                  {item.data.kind === "video" ? (
+                    <video
+                      src={item.data.url}
+                      controls
+                      preload="metadata"
+                      className="rounded-md w-full bg-black"
+                    />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.data.url || item.data.data}
+                      alt={item.data.alt}
+                    />
+                  )}
                   {item.data.alt && <div>{item.data.alt}</div>}
                 </div>
               ) : (

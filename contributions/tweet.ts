@@ -25,6 +25,9 @@ export default function tweetConfig({
           // in the text, which works around that)
           retweetTextRequired: false,
           account: account.replace(/^@/, ""),
+          // images are committed to the repository; videos are uploaded to
+          // the Vercel Blob store; both may also be links to files elsewhere
+          media: { images: "repo", video: true, remoteUrl: true },
         },
         form: {
           description: `${description} Please check the repository rules before submitting to increase the chances that your tweet is accepted.`,

@@ -5,6 +5,8 @@ import { GithubProfile } from "next-auth/providers/github";
 import { Authorized, Body, ConfigWithContribution } from "@/types";
 import { auth } from "@/lib/env.server";
 import log from "@/lib/log";
+import { CAPTCHA_FROM_SESSION } from "@/lib/media/media";
+import { readSession } from "./uploadSession";
 
 type AuthFunction = ({
   req,
@@ -26,7 +28,16 @@ const authMethods: Record<string, AuthFunction> = {
       };
     }
   },
-  captcha: async function ({ body }) {
+  captcha: async function ({ req, body }) {
+    // a captcha solved for uploading files covers the submission too
+    if (body.captcha === CAPTCHA_FROM_SESSION) {
+      if (readSession(req)?.auth === "captcha") {
+        log.info("authorized captcha via upload session");
+        return { type: "captcha" };
+      }
+      log.warn("captcha session expired");
+      return;
+    }
     if (body.captcha) {
       const url = `https://hcaptcha.com/siteverify?secret=${auth.captcha.secret}&response=${body.captcha}`;
       const response = await fetch(url, {

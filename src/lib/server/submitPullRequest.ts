@@ -54,7 +54,11 @@ export default async function submitPullRequest({
   config: { repo, contribution },
   transformed: { files, title, branch, message },
   body,
-}: CreatePullRequestInputs): Promise<{
+  beforeCommit,
+}: CreatePullRequestInputs & {
+  /** called with the final branch name before anything is written */
+  beforeCommit?: (branch: string) => Promise<void>;
+}): Promise<{
   pr: CreatePullRequestOutputs;
   test?: E2ETestResponse;
 }> {
@@ -92,6 +96,8 @@ export default async function submitPullRequest({
       },
     ],
   };
+
+  if (beforeCommit) await beforeCommit(commit.branch);
 
   log.info("commit", { commit });
   const { commits } = await octokit.rest.repos.createOrUpdateFiles(commit);

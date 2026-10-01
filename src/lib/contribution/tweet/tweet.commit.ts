@@ -5,18 +5,28 @@ import { normalizeTweetUrl } from "./tweetUrl";
 import { scheduleToIso } from "./tweetSchedule";
 
 type Image = {
-  data: string;
+  data?: string;
+  /** uploaded to the blob store or linked */
+  url?: string;
   alt?: string;
-  type: string;
+  type?: string;
 };
 
 type Data = {
   media?: Image[];
+  video?: { url: string; alt?: string }[];
   quoteType?: string;
   quoteUrl?: string;
   text?: string;
   schedule?: string;
 };
+
+// alt text is free text: quote it when YAML would read it differently
+function yamlString(value: string) {
+  return /^[\w\s.,!?'()-]+$/.test(value) && !/^\s|\s$/.test(value)
+    ? value
+    : JSON.stringify(value);
+}
 
 const tweetCommit: Commit = async (props) => {
   const { timestamp } = props;
@@ -24,7 +34,13 @@ const tweetCommit: Commit = async (props) => {
   const { title } = prMetadata(props);
   const media: { [key: string]: string } = {};
   const hasQuote = data.quoteType && data.quoteUrl;
-  const hasMedia = data.media && data.media.length > 0;
+  // files stored elsewhere are referenced by URL, twitter-together fetches
+  // them when publishing
+  const linked = [...(data.media || []), ...(data.video || [])].filter(
+    (m) => m.url
+  );
+  const committed = (data.media || []).filter((m) => !m.url && m.data);
+  const hasMedia = linked.length > 0 || committed.length > 0;
   const schedule = scheduleToIso(data.schedule);
   let transformed = "";
   // HEADER START: todo add other types
@@ -35,9 +51,9 @@ const tweetCommit: Commit = async (props) => {
         data.quoteUrl as string
       )}\n`;
     }
-    if (data.media && hasMedia) {
+    if (hasMedia) {
       transformed += `media:
-${data.media
+${committed
   .map(({ data, alt = "", type }: Image, i: number) => {
     const fileName = slugify(`${timestamp} ${title} ${alt}`, {
       append: i, // does not append if i is 0
@@ -46,12 +62,17 @@ ${data.media
     const fileDest = `media/${filePath}`;
     let mediaString = `  - file: ${filePath}\n`;
     if (alt) {
-      mediaString += `    alt: ${alt}\n`;
+      mediaString += `    alt: ${yamlString(alt)}\n`;
     }
-    media[fileDest] = data;
+    media[fileDest] = data as string;
     return mediaString;
   })
-  .join("")}`;
+  .join("")}${linked
+        .map(
+          ({ url, alt }) =>
+            `  - url: ${url}\n${alt ? `    alt: ${yamlString(alt)}\n` : ""}`
+        )
+        .join("")}`;
     }
     if (schedule) {
       // informational in the tweet file, the merge is scheduled via the PR body

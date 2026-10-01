@@ -7,6 +7,7 @@ import ImagesInput from "./image/imagesInput";
 import InfoField from "./info/infoField";
 import CollectionInput from "./collection/collectionInput";
 import DatetimeInput from "./datetime/datetimeInput";
+import MediaInput from "./media/mediaInput";
 
 const components: any = {
   text: TextInput,
@@ -16,6 +17,7 @@ const components: any = {
   info: InfoField,
   collection: CollectionInput,
   datetime: DatetimeInput,
+  media: MediaInput,
 };
 
 export default function FormFields({ fields }: { fields: Fields }) {

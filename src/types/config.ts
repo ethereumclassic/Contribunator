@@ -6,8 +6,23 @@ import type {
 
 export type AuthType = "github" | "captcha" | "api" | "anon";
 
+/** uploads to the Vercel Blob store, see /api/cron/media-cleanup */
+export type MediaStorageConfig = {
+  /**
+   * Delete uploads used by merged pull requests this many days after they
+   * were uploaded. `null` keeps them forever. Default 90.
+   */
+  retentionDays?: number | null;
+  /**
+   * Delete uploads that no open or merged pull request uses (abandoned
+   * forms, closed pull requests) after this many days. Default 7.
+   */
+  orphanGraceDays?: number;
+};
+
 export type Config = {
   title: string;
+  media?: MediaStorageConfig;
   description: string;
   authorization: AuthType[];
   owner: string;

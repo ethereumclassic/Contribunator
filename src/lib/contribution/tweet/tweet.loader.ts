@@ -28,11 +28,19 @@ export default function tweetConfig({
     retweetTextRequired = false,
     account,
     schedule = true,
+    media: mediaOption = {},
     // TODO
-    // media = true,
     // retweet = true,
     // reply = true,
   } = options;
+
+  // which media can be attached, and where it is stored
+  const {
+    images = "repo",
+    video = false,
+    remoteUrl = false,
+    maxVideoMB,
+  } = mediaOption || { images: false as const };
 
   const handle = account?.replace(/^@/, "");
 
@@ -155,15 +163,15 @@ export default function tweetConfig({
                   return true;
                 },
               })
-              .when(["media", "quoteType"], {
-                is: (media: string[], quoteType: string) => {
+              .when(["media", "video", "quoteType"], {
+                is: (media: string[], video: unknown[], quoteType: string) => {
                   if (quoteType === "retweet" && retweetTextRequired) {
                     return true;
                   }
                   if (quoteType === "reply") {
                     return true;
                   }
-                  if (!quoteType && !media) {
+                  if (!quoteType && !media && !video) {
                     return true;
                   }
                   return false;
@@ -177,11 +185,29 @@ export default function tweetConfig({
               }),
           },
         },
-        media: {
-          type: "images",
-          title: "Upload Images",
-          alt: true,
-        },
+        ...(images && {
+          media: {
+            type: "images",
+            title: "Upload Images",
+            alt: true,
+            storage: images,
+            remoteUrl,
+            // X allows up to 4 images, or 1 video
+            hidden: ({ data }) => !!data.video,
+          },
+        }),
+        ...(video && {
+          video: {
+            type: "media",
+            title: "Upload Video",
+            accept: ["video"],
+            max: 1,
+            alt: true,
+            remoteUrl,
+            maxSizeMB: maxVideoMB,
+            hidden: ({ data }) => !!data.media?.length,
+          },
+        }),
         ...(schedule && {
           schedule: {
             type: "datetime",

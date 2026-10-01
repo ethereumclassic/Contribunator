@@ -23,6 +23,7 @@ export default async function testConfig(): Promise<UserConfig> {
   return {
     authorization: ["github", "anon", "api"],
     title: "E2E C11R",
+    media: { retentionDays: 90, orphanGraceDays: 7 },
     description:
       "This is a test mode for end-to-end testing, using a Mock Github API",
     owner: "test-owner",
@@ -123,6 +124,26 @@ export default async function testConfig(): Promise<UserConfig> {
             autoMerge: "schedule",
             options: {
               account: "eth_classic",
+            },
+          }),
+          tweetMedia: tweet({
+            title: "Media Tweet",
+            options: {
+              media: {
+                images: "blob",
+                video: true,
+                remoteUrl: ["example.com", "*.example.com"],
+              },
+            },
+          }),
+          tweetLinks: tweet({
+            title: "Links Tweet",
+            options: { media: { video: true, remoteUrl: true } },
+          }),
+          tweetVideo: tweet({
+            title: "Video Tweet",
+            options: {
+              media: { video: true, maxVideoMB: 64 },
             },
           }),
         },

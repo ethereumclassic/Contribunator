@@ -12,6 +12,9 @@ import {
 
 const config: UserConfig = {
   authorization: ["github", "captcha", "api"],
+  // uploads used by merged pull requests are kept forever; uploads nobody
+  // used are deleted after a week (see /api/cron/media-cleanup)
+  media: { retentionDays: null, orphanGraceDays: 7 },
   title: "Ethereum Classic Contributions",
   description:
     "This website makes it easy to contribute content updates to Ethereum Classic Github repositories without needing to know how to make Pull Requests.",

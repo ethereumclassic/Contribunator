@@ -54,6 +54,15 @@ class Mocktokit {
       error.status = 404;
       throw error;
     }
+    // media cleanup: the branch name says what happened to its pull request
+    if (route === "GET /repos/{owner}/{repo}/pulls") {
+      const head: string = params.head || "";
+      if (head.includes("open")) return { data: [{ state: "open" }] };
+      if (head.includes("merged"))
+        return { data: [{ state: "closed", merged_at: "2020-01-01" }] };
+      if (head.includes("closed")) return { data: [{ state: "closed" }] };
+      return { data: [] };
+    }
     if (route === "POST /repos/{owner}/{repo}/dispatches") {
       dispatched.push({
         repo: params.repo,

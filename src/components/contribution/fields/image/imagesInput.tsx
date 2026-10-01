@@ -37,9 +37,12 @@ function ImagesInput({
   let totalFileSize = 0;
   let lastExisting = 0;
 
-  images.forEach(({ data }, i) => {
-    if (data) {
+  images.forEach(({ data, url }, i) => {
+    if (data || url) {
       lastExisting = i + 1;
+    }
+    // uploaded and linked images are not part of the request
+    if (data && !url) {
       const base64Image = data.split(",")[1];
       const fileSize = Math.round((base64Image.length * 3) / 4);
       totalFileSize += fileSize;

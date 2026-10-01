@@ -18,11 +18,13 @@ import SubmitButton from "./common/submitButton";
 import Submitted from "./common/submitted";
 import CommonOptions from "./common/commonOptions";
 import AuthWidgets from "./common/authWidgets";
+import DraftKeeper from "./common/draftKeeper";
 import FormFields from "./fields/formFields";
 import ConfirmationModal from "./common/confirmationModal";
 import Loading from "../common/spinner";
 import { HiExclamationCircle } from "react-icons/hi";
 import { FormContext } from "./formContext";
+import { allMediaRules } from "@/lib/media/rules";
 
 declare global {
   interface Window {
@@ -46,6 +48,11 @@ function Form({
   useEffect(() => {
     setState({ mounting: false });
   }, []);
+
+  // forms that upload to the blob store keep a draft, so uploads can resume
+  const keepDraft = allMediaRules(config).some(
+    (rules) => rules.storage === "blob"
+  );
 
   // loader if not mounted
   if (state.mounting) {
@@ -82,6 +89,7 @@ function Form({
               onSubmit={formik.handleSubmit}
               className={`text-center space-y-8 bg-base-200 p-4 rounded-lg relative`}
             >
+              {keepDraft && <DraftKeeper submitted={!!state.pr} />}
               {state.pr && <Submitted pr={state.pr} test={state.test} />}
               {!state.pr && (
                 <>

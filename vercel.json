@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/publish-scheduled",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/media-cleanup",
+      "schedule": "17 3 * * *"
     }
   ]
 }
