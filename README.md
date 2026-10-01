@@ -83,7 +83,7 @@ curl -s https://etc.contributions.app/api/contribute -H "x-api-key: $KEY" \
   `createMultipartUpload` with `access: "public"`.
 - Images kept in the repository (`storage: "repo"`, as for ETC tweets) are
   sent inline instead: `"media": [{ "data": "data:image/png;base64,…",
-  "type": "png", "alt": "…" }]` (PNG or JPEG); the whole request must stay
+"type": "png", "alt": "…" }]` (PNG or JPEG); the whole request must stay
   under Vercel's 4.5MB limit.
 - The server checks every file when the contribution is submitted. Uploads
   that no pull request uses are deleted after `media.orphanGraceDays`.
