@@ -25,6 +25,10 @@ export function useUploader(field: string) {
   const [needCaptcha, setNeedCaptcha] = useState(false);
   const controllers = useRef<Record<string, AbortController>>({});
   const waiting = useRef<() => void>();
+  // retries run in callbacks from earlier renders: read the latest values,
+  // or a captcha solved since would never be sent
+  const values = useRef(formik.values);
+  values.current = formik.values;
 
   useEffect(() => {
     const current = controllers.current;
@@ -45,8 +49,8 @@ export function useUploader(field: string) {
   const ensureSession = () =>
     startUploadSession({
       ...target,
-      authorization: formik.values.authorization,
-      captcha: formik.values.captcha,
+      authorization: values.current.authorization,
+      captcha: values.current.captcha,
       setCaptcha: (value) => formik.setFieldValue("captcha", value),
     });
 

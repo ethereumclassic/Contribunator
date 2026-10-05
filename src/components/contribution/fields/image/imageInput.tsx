@@ -6,7 +6,6 @@ import type { Dynamic, UnwrapDynamic } from "@/types";
 import FieldHeader from "@/components/contribution/common/fieldHeader";
 import RemoveButton from "@/components/contribution/common/removeButton";
 import TextInput from "@/components/contribution/fields/text/textInput";
-import Captcha from "@/components/contribution/common/captcha";
 import UploadProgress from "@/components/contribution/common/uploadProgress";
 import {
   MediaLinkInput,
@@ -273,9 +272,7 @@ function ImageInput({
       )}
       {needCaptcha && (
         <div className="mt-2">
-          <UploadCaptchaPrompt>
-            <Captcha />
-          </UploadCaptchaPrompt>
+          <UploadCaptchaPrompt />
         </div>
       )}
       {error && (

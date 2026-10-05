@@ -46,7 +46,7 @@ export function startUploadSession({
     if (!res.ok) {
       active = undefined;
       const json = await res.json().catch(() => ({}));
-      if (authorization === "captcha") {
+      if (authorization === "captcha" && res.status === 401) {
         // hCaptcha responses are single use
         setCaptcha("");
         throw new NeedCaptchaError();

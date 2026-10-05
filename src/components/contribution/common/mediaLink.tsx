@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { HiLink, HiUpload } from "react-icons/hi";
 
 import type { UploadTarget } from "@/lib/upload/uploader";
 import { MediaItem, RemoteUrlOption, checkRemoteUrl } from "@/lib/media/media";
+import { CAPTCHA_ID } from "./captcha";
 
 /** "Upload | Link" switch, styled like the choice buttons */
 export function UploadOrLink({
@@ -100,19 +101,20 @@ export function MediaLinkInput({
   );
 }
 
-/** the captcha, shown inside a field when an upload needs it */
-export function UploadCaptchaPrompt({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+/**
+ * shown inside a field when an upload needs the captcha: the form has one
+ * captcha, for uploading and submitting, so this points to it
+ */
+export function UploadCaptchaPrompt() {
+  useEffect(() => {
+    document
+      .getElementById(CAPTCHA_ID)
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, []);
   return (
-    <div className="bg-base-100 rounded-md p-4 space-y-2">
-      <div className="text-sm">
-        Please complete the CAPTCHA to start uploading. It also covers
-        submitting this form.
-      </div>
-      {children}
+    <div className="bg-base-100 rounded-md p-4 text-sm">
+      Please complete the CAPTCHA below to start uploading. It also covers
+      submitting this form.
     </div>
   );
 }

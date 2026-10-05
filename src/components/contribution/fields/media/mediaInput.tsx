@@ -6,7 +6,6 @@ import type { Dynamic, UnwrapDynamic, ValidationTypes } from "@/types";
 import FieldHeader from "@/components/contribution/common/fieldHeader";
 import RemoveButton from "@/components/contribution/common/removeButton";
 import UploadProgress from "@/components/contribution/common/uploadProgress";
-import Captcha from "@/components/contribution/common/captcha";
 import {
   MediaLinkInput,
   UploadCaptchaPrompt,
@@ -283,9 +282,7 @@ function MediaInput({
           )}
 
           {needCaptcha && (
-            <UploadCaptchaPrompt>
-              <Captcha />
-            </UploadCaptchaPrompt>
+            <UploadCaptchaPrompt />
           )}
         </div>
       )}
