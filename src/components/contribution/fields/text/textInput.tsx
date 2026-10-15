@@ -1,13 +1,18 @@
 import { Field, useField } from "formik";
 import { HiX } from "react-icons/hi";
 
-import type { Dynamic, UnwrapDynamic } from "@/types";
+import type { Dynamic, DynamicProps, UnwrapDynamic } from "@/types";
 
 import FieldHeader from "@/components/contribution/common/fieldHeader";
 import FieldWarning, {
   Warning,
 } from "@/components/contribution/common/fieldWarning";
 import Iframe from "@/components/contribution/common/iframe";
+import CharCounter, {
+  CounterInfo,
+} from "@/components/contribution/common/charCounter";
+
+import { useForm } from "@/components/contribution/formContext";
 
 import withDynamicField from "../withDynamicField";
 
@@ -31,6 +36,8 @@ export type Props = {
   iframe?: (value: string) => string;
   // non-blocking notice shown under the field, may be async
   warning?: Warning;
+  // character count shown under the field, e.g. a tweet's length
+  counter?: (props: DynamicProps) => CounterInfo;
   suggestions?: Suggestions;
   tags?: string[];
   clear?: boolean;
@@ -65,12 +72,14 @@ function TextInput({
   transform,
   iframe,
   warning,
+  counter,
   suggestions,
   placeholder,
   infoLink,
   tags,
 }: UnwrapDynamic<Props, (typeof dynamicProps)[number]>) {
   const [field, meta, helpers] = useField(name);
+  const form = useForm();
   const styles = [
     as === "input" && "input input-bordered",
     as === "textarea" && "textarea textarea-bordered h-32",
@@ -143,6 +152,9 @@ function TextInput({
             </div>
           )}
         </div>
+        {counter && (
+          <CharCounter {...counter({ ...form, value: field.value })} />
+        )}
         {tags && tags.length > 0 && (
           <div className="text-left text-sm">
             {tags.map((tag) => (

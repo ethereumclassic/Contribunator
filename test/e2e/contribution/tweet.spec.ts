@@ -386,6 +386,11 @@ accountTest(
     // 280 characters fit on their own, not with the link
     await f.setText("Tweet Text", "a".repeat(280));
     await f.cannotSubmit(["Tweet is too long (305 of 280 characters)"]);
+    // the counter includes the link too, and has no premium badge
+    const counter = page.locator("[data-char-count]");
+    await expect(counter).toHaveAttribute("data-char-count", "305");
+    await expect(counter).toContainText("25 over the 280 limit");
+    await expect(counter).not.toContainText("Premium");
     await f.setText("Tweet Text", "a".repeat(255));
     await expect(page.getByText(/Tweet is too long/)).toHaveCount(0);
   }
@@ -397,10 +402,20 @@ const premiumTest = formTest({
 });
 
 premiumTest("allows long tweets for premium accounts", async ({ f, page }) => {
+  const counter = page.locator("[data-char-count]");
+  await expect(counter).toContainText("Premium");
+  await expect(counter).toContainText("280 of 280 left");
+  await expect(counter).toContainText("up to 25,000");
+  await f.setText("Tweet Text", "a".repeat(270));
+  await expect(counter).toHaveAttribute("data-char-state", "near");
+  await expect(counter).toContainText("10 of 280 left");
   await f.setText("Tweet Text", "a".repeat(281));
   await expect(page.getByText(/Tweet is too long/)).toHaveCount(0);
+  await expect(counter).toHaveAttribute("data-char-state", "long");
+  await expect(counter).toContainText("Long post: 281 characters, 1 over 280");
   await f.setText("Tweet Text", "a".repeat(25001));
-  await f.cannotSubmit(["Tweet is too long (25001 of 25000 characters)"]);
+  await f.cannotSubmit(["Tweet is too long (25,001 of 25,000 characters)"]);
+  await expect(counter).toContainText("1 over the 25,000 limit");
   await f.setText("Tweet Text", "a".repeat(25000));
   await expect(page.getByText(/Tweet is too long/)).toHaveCount(0);
 });

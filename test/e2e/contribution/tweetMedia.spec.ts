@@ -128,7 +128,7 @@ test("uploads large videos in parts, with progress", async ({ f, page }) => {
     .setInputFiles(videoFile("big.mp4", 20 * MB));
   // progress while uploading, and nothing can be submitted meanwhile
   await expect(page.locator("[data-upload-state]")).toBeVisible();
-  await expect(page.locator("progress")).toBeVisible();
+  await expect(page.locator("[data-upload-state] progress")).toBeVisible();
   await expect(page.locator("[data-media-item=video] video")).toBeVisible({
     timeout: 15000,
   });

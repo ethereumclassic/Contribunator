@@ -28,6 +28,20 @@ const { configs } = twitterText as unknown as {
   configs: { defaults: ParseTweetOptions };
 };
 
+// as X counts it; a quote is published with the post link appended to the
+// text (see twitter-together), so the link counts too
+function tweetLength(text = "", quoteUrl?: string) {
+  if (!text) return 0;
+  return twitterText.parseTweet(quoteUrl ? `${text}\n\n${quoteUrl}` : text, {
+    ...configs.defaults,
+    // never invalid here, the caller compares with its limit
+    maxWeightedTweetLength: Infinity,
+  }).weightedLength;
+}
+
+const quoteOf = (data: { quoteType?: string; quoteUrl?: string }) =>
+  (data.quoteType === "retweet" && data.quoteUrl) || undefined;
+
 export default function tweetConfig({
   options = {},
 }: TweetConfigInput = {}): ContributionLoaded {
@@ -139,6 +153,11 @@ export default function tweetConfig({
           title: "Tweet Text",
           placeholder: "Tweet Text Here",
           suggestions: suggestions(),
+          counter: ({ value, data }) => ({
+            count: tweetLength(value, quoteOf(data)),
+            limit: MAX_LENGTH,
+            max: premium ? PREMIUM_MAX_LENGTH : undefined,
+          }),
           tags: ["👀", "😂", "✨", "🔥", "💪", "#twitter", "#memes", "#love"],
           validation: {
             yup: string()
@@ -161,16 +180,12 @@ export default function tweetConfig({
                       message: "Quote tweets cannot contain other links",
                     });
                   }
-                  const tweet = twitterText.parseTweet(
-                    quote ? `${text}\n\n${ctx.parent.quoteUrl}` : text,
-                    {
-                      ...configs.defaults,
-                      maxWeightedTweetLength: maxLength,
-                    }
-                  );
-                  if (!tweet.valid) {
+                  const length = tweetLength(text, quoteOf(ctx.parent));
+                  if (length > maxLength) {
                     return ctx.createError({
-                      message: `Tweet is too long (${tweet.weightedLength} of ${maxLength} characters)`,
+                      message: `Tweet is too long (${length.toLocaleString(
+                        "en-US"
+                      )} of ${maxLength.toLocaleString("en-US")} characters)`,
                     });
                   }
                   return true;
