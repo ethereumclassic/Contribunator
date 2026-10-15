@@ -33,6 +33,12 @@ export type TweetConfigInput = Omit<ContributionCommonOptions, "autoMerge"> & {
     retweetTextRequired?: boolean;
     /** handle of the posting account (without @), enables reply/quote checks */
     account?: string;
+    /**
+     * the posting account has X Premium (verified): tweets may be up to
+     * 25,000 characters instead of 280. Set `X_PREMIUM: true` for
+     * twitter-together in the tweets repository as well.
+     */
+    premium?: boolean;
     /** show the optional schedule field, default true */
     schedule?: boolean;
   };

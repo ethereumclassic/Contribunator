@@ -29,6 +29,9 @@ const config: UserConfig = {
       // scheduled tweets merge themselves once approved (merging does not
       // publish them); immediate tweets still need a human to merge
       autoMerge: "schedule",
+      // verified (X Premium): tweets up to 25,000 characters; the tweets
+      // repository sets X_PREMIUM for twitter-together to match
+      premium: true,
     }),
     "ethereumclassic.github.io": {
       title: "EthereumClassic.org Website",

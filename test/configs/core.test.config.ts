@@ -119,6 +119,10 @@ export default async function testConfig(): Promise<UserConfig> {
               retweetTextRequired: true,
             },
           }),
+          tweetPremium: tweet({
+            title: "Premium Tweet",
+            options: { account: "eth_classic", premium: true },
+          }),
           tweetAccount: tweet({
             title: "Account Tweet",
             autoMerge: "schedule",

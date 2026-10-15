@@ -1,7 +1,7 @@
 import { ContributionLoaded } from "@/types";
 
 import { string } from "yup";
-import twitterText from "twitter-text";
+import twitterText, { ParseTweetOptions } from "twitter-text";
 
 import suggestions from "./tweet.suggestions";
 import prMetadata from "./tweet.prMetadata";
@@ -20,6 +20,13 @@ const MIN_SCHEDULE_MINUTES = 30;
 const MAX_SCHEDULE_DAYS = 365;
 // scheduled tweets are published by a check that runs every 30 minutes
 const SCHEDULE_STEP_MINUTES = 30;
+// X Premium (verified) accounts can post up to 25,000 characters
+const MAX_LENGTH = 280;
+const PREMIUM_MAX_LENGTH = 25000;
+// X's counting rules; @types/twitter-text leaves out the exported configs
+const { configs } = twitterText as unknown as {
+  configs: { defaults: ParseTweetOptions };
+};
 
 export default function tweetConfig({
   options = {},
@@ -27,6 +34,7 @@ export default function tweetConfig({
   const {
     retweetTextRequired = false,
     account,
+    premium = false,
     schedule = true,
     media: mediaOption = {},
     // TODO
@@ -43,6 +51,7 @@ export default function tweetConfig({
   } = mediaOption || { images: false as const };
 
   const handle = account?.replace(/^@/, "");
+  const maxLength = premium ? PREMIUM_MAX_LENGTH : MAX_LENGTH;
 
   // deep merge form and form options
   return {
@@ -153,11 +162,15 @@ export default function tweetConfig({
                     });
                   }
                   const tweet = twitterText.parseTweet(
-                    quote ? `${text}\n\n${ctx.parent.quoteUrl}` : text
+                    quote ? `${text}\n\n${ctx.parent.quoteUrl}` : text,
+                    {
+                      ...configs.defaults,
+                      maxWeightedTweetLength: maxLength,
+                    }
                   );
                   if (!tweet.valid) {
                     return ctx.createError({
-                      message: "Tweet is too long",
+                      message: `Tweet is too long (${tweet.weightedLength} of ${maxLength} characters)`,
                     });
                   }
                   return true;

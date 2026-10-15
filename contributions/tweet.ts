@@ -4,11 +4,14 @@ export default function tweetConfig({
   account,
   description,
   autoMerge = false,
+  premium = false,
 }: {
   account: string;
   description: string;
   /** merge tweet pull requests automatically once approved; "schedule" for scheduled tweets only */
   autoMerge?: boolean | "schedule";
+  /** the account has X Premium: tweets up to 25,000 characters */
+  premium?: boolean;
 }) {
   return {
     title: `${account} tweets`,
@@ -25,6 +28,7 @@ export default function tweetConfig({
           // in the text, which works around that)
           retweetTextRequired: false,
           account: account.replace(/^@/, ""),
+          premium,
           // images are committed to the repository; videos are uploaded to
           // the Vercel Blob store; both may also be links to files elsewhere
           media: { images: "repo", video: true, remoteUrl: true },

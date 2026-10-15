@@ -378,14 +378,31 @@ accountTest("quote text cannot contain other links", async ({ f }) => {
   await f.hasNoText("Quote tweets cannot contain other links");
 });
 
-accountTest("counts the quoted link in the tweet length", async ({ f }) => {
-  await f.clickButton("Quote Type", "Retweet");
-  await f.setText("Retweet URL", "https://x.com/test/status/123");
-  // 280 characters fit on their own, not with the link
-  await f.setText("Tweet Text", "a".repeat(280));
-  await f.cannotSubmit(["Tweet is too long"]);
-  await f.setText("Tweet Text", "a".repeat(255));
-  await f.hasNoText("Tweet is too long");
+accountTest(
+  "counts the quoted link in the tweet length",
+  async ({ f, page }) => {
+    await f.clickButton("Quote Type", "Retweet");
+    await f.setText("Retweet URL", "https://x.com/test/status/123");
+    // 280 characters fit on their own, not with the link
+    await f.setText("Tweet Text", "a".repeat(280));
+    await f.cannotSubmit(["Tweet is too long (305 of 280 characters)"]);
+    await f.setText("Tweet Text", "a".repeat(255));
+    await expect(page.getByText(/Tweet is too long/)).toHaveCount(0);
+  }
+);
+
+const premiumTest = formTest({
+  repo: "_E2E_tweets",
+  contribution: "tweetPremium",
+});
+
+premiumTest("allows long tweets for premium accounts", async ({ f, page }) => {
+  await f.setText("Tweet Text", "a".repeat(281));
+  await expect(page.getByText(/Tweet is too long/)).toHaveCount(0);
+  await f.setText("Tweet Text", "a".repeat(25001));
+  await f.cannotSubmit(["Tweet is too long (25001 of 25000 characters)"]);
+  await f.setText("Tweet Text", "a".repeat(25000));
+  await expect(page.getByText(/Tweet is too long/)).toHaveCount(0);
 });
 
 accountTest(
