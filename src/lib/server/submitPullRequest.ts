@@ -133,28 +133,47 @@ export default async function submitPullRequest({
         : authorized.type,
   });
 
-  // add tags and reviwer status
-  await Promise.all([
-    repo.addLabels &&
-      octokit.rest.issues.addLabels({
-        owner: repo.owner,
-        repo: repo.name,
-        issue_number: data.number,
-        labels: repo.addLabels,
-      }),
-    (repo.requestReviewers?.teams || repo.requestReviewers?.users) &&
-      octokit.rest.pulls.requestReviewers({
-        owner: repo.owner,
-        repo: repo.name,
-        pull_number: data.number,
-        ...(repo.requestReviewers.teams && {
-          team_reviewers: repo.requestReviewers.teams,
+  // labels and reviewers. Best effort, like auto-merge below: the pull
+  // request exists either way, and one failing must not stop the others
+  const steps: [string, Promise<unknown> | undefined][] = [
+    [
+      "add labels",
+      repo.addLabels &&
+        octokit.rest.issues.addLabels({
+          owner: repo.owner,
+          repo: repo.name,
+          issue_number: data.number,
+          labels: repo.addLabels,
         }),
-        ...(repo.requestReviewers.users && {
-          reviewers: repo.requestReviewers.users,
+    ],
+    [
+      "request reviewers",
+      (repo.requestReviewers?.teams || repo.requestReviewers?.users) &&
+        octokit.rest.pulls.requestReviewers({
+          owner: repo.owner,
+          repo: repo.name,
+          pull_number: data.number,
+          ...(repo.requestReviewers.teams && {
+            team_reviewers: repo.requestReviewers.teams,
+          }),
+          ...(repo.requestReviewers.users && {
+            reviewers: repo.requestReviewers.users,
+          }),
         }),
-      }),
-  ]);
+    ],
+  ];
+  const results = await Promise.allSettled(steps.map(([, step]) => step));
+  results.forEach((result, i) => {
+    if (result.status === "rejected") {
+      log.warn(`could not ${steps[i][0]}`, {
+        number: data.number,
+        error:
+          result.reason instanceof Error
+            ? result.reason.message
+            : String(result.reason),
+      });
+    }
+  });
 
   // auto-merge: the pull request merges itself once the branch protection
   // rules are met. Best effort: the pull request exists either way.

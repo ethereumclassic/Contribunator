@@ -108,8 +108,14 @@ class Mocktokit {
         };
       },
       requestReviewers: async ({ reviewers, team_reviewers }: any) => {
-        // noop
-        // log.info({ reviewers, team_reviewers });
+        // GitHub refusing a reviewer request, see the _E2E_reviewersFail repo
+        if (team_reviewers?.includes("broken-team")) {
+          const error: any = new Error(
+            "Reviews may only be requested from collaborators"
+          );
+          error.status = 422;
+          throw error;
+        }
       },
     },
     issues: {

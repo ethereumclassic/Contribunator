@@ -93,6 +93,14 @@ export default async function testConfig(): Promise<UserConfig> {
           test,
         },
       },
+      _E2E_reviewersFail: {
+        title: "Reviewer Request Fails",
+        addLabels: ["test-tag"],
+        requestReviewers: { teams: ["broken-team"] },
+        contributions: {
+          tweet: tweet({ autoMerge: true }),
+        },
+      },
       _E2E_anon: {
         authorization: ["anon"],
         title: "Anon Only",

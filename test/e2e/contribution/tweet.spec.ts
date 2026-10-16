@@ -580,3 +580,20 @@ test("converts wall times between zones", async () => {
   expect(wallToUtc("2026-09-21T07:00", "UTC")).toBe("2026-09-21T07:00");
   expect(wallToUtc("garbage", "UTC")).toBe("");
 });
+
+const reviewersFailTest = formTest({
+  repo: "_E2E_reviewersFail",
+  contribution: "tweet",
+});
+
+reviewersFailTest(
+  "enables auto-merge even when requesting reviewers fails",
+  async ({ f }) => {
+    await f.setText("Tweet Text", "Still merges itself");
+    const { res } = await f.submit();
+    expect(res.autoMerge).toEqual({
+      pullRequestId: "PR_node_123",
+      mergeMethod: "MERGE",
+    });
+  }
+);
